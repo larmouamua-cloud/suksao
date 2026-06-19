@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SocialNet</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#1877f2;--blue-dk:#166fe5;--blue-lt:#e7f3ff;--bg:#f0f2f5;--card:#fff;--border:#dddfe2;--text:#050505;--muted:#65676b;--green:#42b72a;--red:#e41e3f;--r:8px;--r-lg:12px;--sh:0 1px 2px rgba(0,0,0,.1);--nav:56px;--lw:280px;--rw:280px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;background:var(--bg);color:var(--text)}
+a{color:inherit;text-decoration:none}button{cursor:pointer;font-family:inherit}
+
+/* ── AUTH SCREEN ── */
+#authScreen{display:flex;min-height:100vh;align-items:center;justify-content:center;background:var(--bg);padding:16px}
+.auth-wrap{display:flex;gap:32px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:900px;width:100%}
+.auth-hero h1{font-size:48px;font-weight:900;color:var(--blue);line-height:1}
+.auth-hero p{font-size:18px;margin-top:16px;max-width:320px;line-height:1.5;color:var(--text)}
+.auth-box{background:var(--card);border-radius:var(--r-lg);box-shadow:0 2px 24px rgba(0,0,0,.12);padding:24px;width:100%;max-width:396px}
+.auth-box input{width:100%;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r);font-size:17px;margin-bottom:12px;outline:none;transition:.15s}
+.auth-box input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,119,242,.2)}
+.btn-primary{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:17px;font-weight:700;transition:.15s}
+.btn-primary:hover{background:var(--blue-dk)}
+.btn-secondary{width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;margin-top:16px;transition:.15s}
+.btn-secondary:hover{filter:brightness(.9)}
+.auth-divider{height:1px;background:var(--border);margin:16px 0}
+.auth-link{color:var(--blue);cursor:pointer;font-weight:600}
+.auth-err{color:var(--red);font-size:14px;margin-bottom:10px;padding:10px;background:#fff0f0;border-radius:var(--r);display:none}
+.auth-err.show{display:block}
+
+/* ── APP SCREEN ── */
+#appScreen{display:none}
+
+/* ── NAVBAR ── */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:8px;z-index:100;box-shadow:var(--sh)}
+.logo{font-size:28px;font-weight:900;color:var(--blue);letter-spacing:-1px}
+.nav-srch{flex:1;max-width:240px;position:relative}
+.nav-srch input{width:100%;height:36px;background:#f0f2f5;border:none;border-radius:20px;padding:0 12px 0 36px;font-size:14px;outline:none;color:var(--text)}
+.nav-srch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.srch-results{position:absolute;top:42px;left:0;right:0;background:#fff;border-radius:var(--r-lg);box-shadow:0 4px 20px rgba(0,0,0,.15);display:none;z-index:200;overflow:hidden}
+.srch-results.open{display:block}
+.srch-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:.15s}
+.srch-item:hover{background:#f0f2f5}
+.nav-tabs{display:flex;gap:4px;flex:1;justify-content:center}
+.nav-tab{display:flex;align-items:center;justify-content:center;width:108px;height:48px;border-radius:var(--r);cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;transition:.15s}
+.nav-tab:hover{background:#f0f2f5}.nav-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.nav-tab svg{width:24px;height:24px}
+.nav-acts{display:flex;gap:8px;align-items:center}
+.ic-btn{width:36px;height:36px;background:#e4e6eb;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text);font-size:18px;position:relative;transition:.15s}
+.ic-btn:hover{background:#d8dadf}
+.badge{position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;font-size:11px;font-weight:700;border-radius:10px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #fff}
+.nav-av{width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+
+/* ── LAYOUT ── */
+.layout{display:flex;min-height:100vh;padding-top:var(--nav)}
+.left-panel{width:var(--lw);position:fixed;top:var(--nav);left:0;height:calc(100vh - var(--nav));overflow-y:auto;padding:8px}
+.right-panel{width:var(--rw);position:fixed;top:var(--nav);right:0;height:calc(100vh - var(--nav));overflow-y:auto;padding:8px}
+.feed-col{flex:1;margin-left:var(--lw);margin-right:var(--rw);max-width:590px;margin:0 auto;padding:16px 0 80px;padding-left:calc(var(--lw));padding-right:calc(var(--rw))}
+.feed-inner{max-width:590px;margin:0 auto;padding:16px}
+
+/* ── LEFT NAV ── */
+.ni{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--r);cursor:pointer;font-size:15px;font-weight:500;transition:.15s;color:var(--text)}
+.ni:hover{background:#e4e6eb}.ni.active{background:var(--blue-lt);color:var(--blue)}
+.ni-icon{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px}
+.l-divider{height:1px;background:var(--border);margin:8px 0}
+.l-title{font-size:17px;font-weight:700;padding:8px 12px 4px}
+
+/* ── CARD ── */
+.card{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
+
+/* ── STORIES ── */
+.stories-row{display:flex;gap:8px;overflow-x:auto;padding:12px;scrollbar-width:none}
+.stories-row::-webkit-scrollbar{display:none}
+.s-card{flex-shrink:0;width:96px;height:160px;border-radius:var(--r-lg);position:relative;cursor:pointer;overflow:hidden;background:#e4e6eb;border:3px solid transparent}
+.s-card.new{border-color:var(--blue)}
+.s-grad{position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.s-av{position:absolute;top:8px;left:8px;width:32px;height:32px;border-radius:50%;border:2px solid var(--blue);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff}
+.s-add{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);width:34px;height:34px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px}
+.s-name{position:absolute;bottom:8px;left:6px;right:6px;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.6);line-height:1.2}
+.s-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:42px}
+
+/* ── CREATE POST ── */
+.cp{padding:12px}
+.cp-row{display:flex;gap:10px;align-items:center}
+.cp-av{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff}
+.cp-inp{flex:1;background:#f0f2f5;border:none;border-radius:20px;padding:9px 16px;font-size:15px;cursor:pointer;color:var(--muted);text-align:left;font-family:inherit}
+.cp-inp:hover{background:#e4e6eb}
+.cp-div{height:1px;background:var(--border);margin:12px 0}
+.cp-acts{display:flex;gap:4px}
+.cp-act{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:var(--r);font-size:14px;font-weight:600;transition:.15s;border:none;background:transparent;color:var(--muted)}
+.cp-act:hover{background:#f0f2f5}
+
+/* ── POST ── */
+.ph{display:flex;align-items:center;padding:12px 16px 0;gap:10px}
+.pav{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;object-fit:cover}
+.pauth{font-weight:600;font-size:15px}
+.pmeta{font-size:13px;color:var(--muted)}
+.pmenu{margin-left:auto;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:var(--muted);transition:.15s}
+.pmenu:hover{background:#f0f2f5}
+.pbody{padding:10px 16px 6px;font-size:15px;line-height:1.5}
+.pimg{width:100%;max-height:480px;object-fit:cover;display:block;background:#e4e6eb}
+.pimg-placeholder{width:100%;display:flex;align-items:center;justify-content:center;font-size:64px;min-height:200px}
+.pimg-grid{display:grid;gap:2px}
+.pimg-grid.g2{grid-template-columns:1fr 1fr}
+.preact{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 4px;font-size:14px;color:var(--muted)}
+.preact-sum{display:flex;align-items:center;gap:4px;cursor:pointer}
+.preact-sum:hover{text-decoration:underline}
+.remojis{display:flex}
+.re{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin-right:-3px;border:1.5px solid #fff}
+.re-b{background:var(--blue)}.re-r{background:var(--red)}.re-y{background:#f7b928}
+.pstats{display:flex;gap:12px;cursor:pointer}
+.pstats span:hover{text-decoration:underline}
+.pbar{border-top:1px solid var(--border);display:flex;padding:4px 8px}
+.pact{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:var(--r);font-size:15px;font-weight:600;color:var(--muted);transition:.15s;border:none;background:transparent}
+.pact:hover{background:#f0f2f5}.pact.liked{color:var(--blue)}.pact.saved{color:#f7b928}
+
+/* ── COMMENTS ── */
+.csect{padding:4px 16px 12px}
+.ci-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.cav{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff}
+.ci-wrap{flex:1;background:#f0f2f5;border-radius:18px;padding:8px 12px;display:flex;gap:8px;align-items:center}
+.ci-wrap input{flex:1;border:none;background:transparent;font-size:14px;outline:none;color:var(--text)}
+.ci-wrap input::placeholder{color:var(--muted)}
+.cmt{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
+.cbub{background:#f0f2f5;border-radius:18px;padding:8px 12px;flex:1}
+.caut{font-weight:600;font-size:13px}
+.ctxt{font-size:14px;margin-top:1px}
+.cft{display:flex;gap:12px;padding:2px 0 0 12px;font-size:12px;color:var(--muted);font-weight:600}
+.cft span{cursor:pointer}.cft span:hover{text-decoration:underline}.cft .cl{color:var(--blue)}
+
+/* ── MODAL ── */
+.mb{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:none;align-items:center;justify-content:center}
+.mb.open{display:flex}
+.md{background:#fff;border-radius:var(--r-lg);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 4px 30px rgba(0,0,0,.25)}
+.md-hd{display:flex;align-items:center;justify-content:center;padding:16px;border-bottom:1px solid var(--border);position:relative}
+.md-ti{font-size:20px;font-weight:700}
+.md-cl{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:36px;height:36px;background:#e4e6eb;border:none;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.md-cl:hover{background:#d8dadf}
+.md-bd{padding:16px}
+.create-ta{width:100%;min-height:100px;border:none;font-size:18px;outline:none;resize:none;font-family:inherit;color:var(--text);line-height:1.5}
+.create-ta::placeholder{color:var(--muted)}
+.priv-select{background:#e4e6eb;border:none;border-radius:var(--r);padding:4px 10px;font-size:13px;font-weight:600;cursor:pointer;outline:none}
+.atp{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:12px}
+.atp-icons{display:flex;gap:4px}
+.atp-ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:.15s}
+.atp-ic:hover{background:#f0f2f5}
+.btn-post{width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;transition:.15s}
+.btn-post:hover{background:var(--blue-dk)}.btn-post:disabled{background:#bec3c9}
+.preview-imgs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.preview-imgs img{width:80px;height:80px;object-fit:cover;border-radius:var(--r);border:1px solid var(--border)}
+
+/* ── NOTIF PANEL ── */
+.np{position:absolute;top:46px;right:0;width:360px;background:#fff;border-radius:var(--r-lg);box-shadow:0 4px 30px rgba(0,0,0,.2);z-index:150;overflow:hidden;border:1px solid var(--border);max-height:80vh;overflow-y:auto}
+.np-hd{padding:16px;font-size:20px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.np-clear{font-size:14px;color:var(--blue);cursor:pointer;font-weight:400}
+.np-item{display:flex;gap:10px;padding:10px 16px;cursor:pointer;transition:.15s;align-items:flex-start}
+.np-item:hover{background:#f0f2f5}.np-item.unread{background:var(--blue-lt)}
+.np-av{position:relative;flex-shrink:0}
+.np-type{position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid #fff}
+.nt-l{background:var(--blue)}.nt-c{background:var(--green)}.nt-f{background:#9b59b6}.nt-s{background:#e67e22}
+.np-txt{flex:1}
+.np-txt p{font-size:14px;line-height:1.4}
+.np-time{font-size:13px;color:var(--blue);font-weight:500;margin-top:2px}
+.np-dot{width:12px;height:12px;background:var(--blue);border-radius:50%;flex-shrink:0;margin-top:14px}
+
+/* ── RIGHT PANEL ── */
+.sug-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--r)}
+.sug-av{width:60px;height:60px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;object-fit:cover}
+.sug-info{flex:1}
+.sug-name{font-weight:600;font-size:14px}
+.sug-mut{font-size:12px;color:var(--muted);margin:2px 0}
+.btn-follow{background:var(--blue-lt);color:var(--blue);border:none;border-radius:var(--r);padding:6px 16px;font-size:14px;font-weight:600;transition:.15s}
+.btn-follow:hover{background:#cce0ff}
+.contact-item{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:var(--r);cursor:pointer;transition:.15s}
+.contact-item:hover{background:#e4e6eb}
+.c-av{width:36px;height:36px;border-radius:50%;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px}
+.c-dot{position:absolute;bottom:0;right:0;width:11px;height:11px;background:#44bd32;border-radius:50%;border:2px solid #fff}
+.panel-title{font-size:17px;font-weight:700;padding:8px 4px 4px}
+
+/* ── LOADING ── */
+.loading{text-align:center;padding:24px;color:var(--muted)}
+.skeleton{background:#e4e6eb;border-radius:var(--r);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.sk-card{padding:16px}
+.sk-av{width:40px;height:40px;border-radius:50%}
+.sk-line{height:12px;border-radius:6px;margin-top:10px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#050505;color:#fff;padding:10px 20px;border-radius:var(--r);font-size:14px;z-index:999;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* ── AVATAR COLORS ── */
+.av0{background:#1877f2}.av1{background:#42b72a}.av2{background:#9b59b6}
+.av3{background:#e67e22}.av4{background:#e74c3c}.av5{background:#1abc9c}
+.av6{background:#3498db}.av7{background:#e91e63}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1180px){.right-panel,.feed-col{padding-right:0}.feed-col{margin-right:0}.right-panel{display:none}}
+@media(max-width:860px){.left-panel{display:none}.feed-col{padding-left:0;margin-left:0}}
+@media(max-width:600px){.nav-tab span{display:none}.nav-srch{max-width:100px}}
+
+/* ── DM ─────────────────────────────────────────────────── */
+.dm-wrap{display:flex;height:calc(100vh - var(--nav));background:var(--card);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh)}
+.dm-sidebar{width:340px;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.dm-sidebar-hd{padding:16px;font-size:20px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.dm-new-btn{width:36px;height:36px;background:#f0f2f5;border:none;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.dm-new-btn:hover{background:#e4e6eb}
+.dm-search{padding:8px 12px;border-bottom:1px solid var(--border)}
+.dm-search input{width:100%;background:#f0f2f5;border:none;border-radius:20px;padding:8px 14px;font-size:14px;outline:none}
+.dm-list{flex:1;overflow-y:auto}
+.dm-conv-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:.15s}
+.dm-conv-item:hover{background:#f0f2f5}.dm-conv-item.active{background:var(--blue-lt)}
+.dm-conv-av{width:48px;height:48px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff}
+.dm-conv-info{flex:1;min-width:0}
+.dm-conv-name{font-weight:600;font-size:15px}
+.dm-conv-last{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.dm-conv-time{font-size:12px;color:var(--muted);flex-shrink:0}
+.dm-unread-dot{width:10px;height:10px;background:var(--blue);border-radius:50%;flex-shrink:0}
+.dm-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.dm-main-hd{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.dm-back-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--blue);display:none}
+.dm-main-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+.dm-main-name{font-weight:600;font-size:16px}
+.dm-main-status{font-size:13px;color:var(--green)}
+.dm-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
+.dm-msg{display:flex;align-items:flex-end;gap:6px;max-width:72%}
+.dm-msg.me{align-self:flex-end;flex-direction:row-reverse}
+.dm-msg.them{align-self:flex-start}
+.dm-msg-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.dm-bubble{padding:10px 14px;border-radius:18px;font-size:15px;line-height:1.4;max-width:100%;word-break:break-word}
+.dm-msg.me .dm-bubble{background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+.dm-msg.them .dm-bubble{background:#f0f2f5;color:var(--text);border-bottom-left-radius:4px}
+.dm-msg-img{max-width:220px;border-radius:12px;display:block;cursor:pointer}
+.dm-msg-time{font-size:11px;color:var(--muted);text-align:right;margin-top:2px;padding:0 4px}
+.dm-input-wrap{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center}
+.dm-input-inner{flex:1;background:#f0f2f5;border-radius:20px;padding:8px 14px;display:flex;gap:8px;align-items:center}
+.dm-input-inner input{flex:1;border:none;background:transparent;font-size:15px;outline:none;color:var(--text)}
+.dm-input-inner input::placeholder{color:var(--muted)}
+.dm-send-btn{width:40px;height:40px;background:var(--blue);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.dm-send-btn:hover{background:var(--blue-dk)}.dm-send-btn:disabled{background:#bec3c9}
+.dm-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:12px}
+.dm-empty-icon{font-size:64px}
+.img-preview-bar{display:flex;align-items:center;gap:8px;padding:8px 16px 0}
+.img-preview-bar img{width:56px;height:56px;object-fit:cover;border-radius:var(--r);border:1px solid var(--border)}
+.img-preview-bar .rm-img{background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+@media(max-width:760px){.dm-sidebar{width:100%}.dm-main{display:none}.dm-main.open{display:flex;position:fixed;inset:var(--nav) 0 0 0;z-index:50;background:#fff}.dm-back-btn{display:block!important}.dm-sidebar.hidden{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+  AUTH SCREEN
+══════════════════════════════════════════════════ -->
+<div id="authScreen">
+  <div class="auth-wrap">
+    <div class="auth-hero">
+      <h1>Social<br>Net</h1>
+      <p>เชื่อมต่อกับเพื่อน ครอบครัว<br>และสิ่งที่คุณสนใจ</p>
+    </div>
+    <!-- LOGIN -->
+    <div class="auth-box" id="loginBox">
+      <div class="auth-err" id="loginErr"></div>
+      <input type="email" id="loginEmail" placeholder="อีเมล" autocomplete="email">
+      <input type="password" id="loginPw" placeholder="รหัสผ่าน" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+      <div class="auth-divider"></div>
+      <button class="btn-secondary" onclick="showRegister()">สร้างบัญชีใหม่</button>
+    </div>
+    <!-- REGISTER -->
+    <div class="auth-box" id="registerBox" style="display:none">
+      <div style="font-size:20px;font-weight:700;margin-bottom:4px">สร้างบัญชีใหม่</div>
+      <div style="font-size:15px;color:var(--muted);margin-bottom:16px">ง่ายและรวดเร็ว</div>
+      <div class="auth-err" id="regErr"></div>
+      <input type="text"     id="regName"  placeholder="ชื่อ-นามสกุล">
+      <input type="text"     id="regUser"  placeholder="ชื่อผู้ใช้ (username)">
+      <input type="email"    id="regEmail" placeholder="อีเมล">
+      <input type="password" id="regPw"    placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)">
+      <button class="btn-secondary" onclick="doRegister()">ลงทะเบียน</button>
+      <div style="text-align:center;margin-top:16px"><span class="auth-link" onclick="showLogin()">มีบัญชีอยู่แล้ว? เข้าสู่ระบบ</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+  APP SCREEN
+══════════════════════════════════════════════════ -->
+<div id="appScreen">
+
+<!-- NAVBAR -->
+<nav>
+  <div class="logo">S</div>
+  <div class="nav-srch">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="ค้นหา" id="searchInput" oninput="doSearch()" onfocus="document.getElementById('searchRes').classList.add('open')" onblur="setTimeout(()=>document.getElementById('searchRes').classList.remove('open'),200)">
+    <div class="srch-results" id="searchRes"></div>
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="setTab(this,'feed')">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    </div>
+    <div class="nav-tab" onclick="setTab(this,'explore')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </div>
+    <div class="nav-tab" onclick="setTab(this,'saved')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div class="nav-tab" onclick="setTab(this,'profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <div class="nav-tab" onclick="setTab(this,'dm')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="badge" id="dmBadge" style="display:none;position:absolute;top:6px;right:14px">0</span>
+    </div>
+  </div>
+  <div class="nav-acts" style="position:relative">
+    <button class="ic-btn" id="notifBtn" onclick="toggleNotif()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      <span class="badge" id="notifBadge" style="display:none">0</span>
+    </button>
+    <div class="nav-av av0" id="navAvatar">ก</div>
+    <!-- NOTIF PANEL -->
+    <div class="np" id="notifPanel" style="display:none">
+      <div class="np-hd">
+        <span>การแจ้งเตือน</span>
+        <span class="np-clear" onclick="markAllRead()">ทำเครื่องหมายว่าอ่านแล้ว</span>
+      </div>
+      <div id="notifList"><div class="loading">กำลังโหลด...</div></div>
+    </div>
+  </div>
+</nav>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="ni active" id="leftMe" onclick="setTab(document.querySelector('.nav-tab:nth-child(4)'),'profile')">
+      <div class="ni-icon av0" id="leftAvatar">ก</div>
+      <span id="leftName">กำลังโหลด...</span>
+    </div>
+    <div class="ni" onclick="setTab(document.querySelector('.nav-tab:nth-child(1)'),'feed')">
+      <div class="ni-icon" style="background:#e4e6eb">🏠</div><span>หน้าแรก</span>
+    </div>
+    <div class="ni" onclick="setTab(document.querySelector('.nav-tab:nth-child(2)'),'explore')">
+      <div class="ni-icon" style="background:#e4e6eb">🔍</div><span>ค้นหา</span>
+    </div>
+    <div class="ni" onclick="setTab(document.querySelector('.nav-tab:nth-child(3)'),'saved')">
+      <div class="ni-icon" style="background:#e4e6eb">🔖</div><span>บุ๊กมาร์ก</span>
+    </div>
+    <div class="l-divider"></div>
+    <div class="l-title">ทางลัด</div>
+    <div class="ni"><div class="ni-icon">🎮</div><span>กลุ่มเกมเมอร์ไทย</span></div>
+    <div class="ni"><div class="ni-icon">🍜</div><span>สูตรอาหารไทย</span></div>
+    <div class="ni"><div class="ni-icon">📸</div><span>Photography TH</span></div>
+    <div class="l-divider"></div>
+    <div class="ni" onclick="doLogout()" style="color:var(--red)">
+      <div class="ni-icon" style="background:#fff0f0">🚪</div><span>ออกจากระบบ</span>
+    </div>
+  </div>
+
+  <!-- FEED COL -->
+  <div style="flex:1;padding-top:0;margin-left:var(--lw);margin-right:var(--rw)">
+    <div style="max-width:590px;margin:0 auto;padding:16px 8px 80px" id="mainContent">
+      <div class="loading">กำลังโหลด...</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel" id="rightPanel">
+    <div class="panel-title">ผู้ที่คุณอาจรู้จัก</div>
+    <div id="suggestionList"><div class="loading" style="padding:8px">กำลังโหลด...</div></div>
+    <div style="height:1px;background:var(--border);margin:12px 0"></div>
+    <div class="panel-title">ผู้ติดต่อ</div>
+    <div id="contactList"><div class="loading" style="padding:8px">กำลังโหลด...</div></div>
+  </div>
+
+</div>
+
+<!-- CREATE POST MODAL -->
+<div class="mb" id="createModal" onclick="if(event.target===this)closeCreate()">
+  <div class="md">
+    <div class="md-hd">
+      <div class="md-ti">สร้างโพสต์</div>
+      <button class="md-cl" onclick="closeCreate()">✕</button>
+    </div>
+    <div class="md-bd">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+        <div class="cav av0" id="modalAvatar" style="width:40px;height:40px;font-size:16px;font-weight:700">ก</div>
+        <div>
+          <div style="font-weight:600;font-size:15px" id="modalName">ผู้ใช้</div>
+          <select class="priv-select" id="postPrivacy">
+            <option value="public">🌐 สาธารณะ</option>
+            <option value="followers">👥 เพื่อน</option>
+            <option value="private">🔒 เฉพาะฉัน</option>
+          </select>
+        </div>
+      </div>
+      <textarea class="create-ta" id="postContent" placeholder="คุณกำลังคิดอะไรอยู่?" oninput="document.getElementById('postBtn').disabled=!this.value.trim()&&!previewFiles.length"></textarea>
+      <div class="preview-imgs" id="previewImgs"></div>
+    </div>
+    <div style="padding:0 16px 16px">
+      <div class="atp">
+        <span style="font-weight:600;font-size:14px">เพิ่มในโพสต์</span>
+        <div class="atp-icons">
+          <label class="atp-ic" title="รูปภาพ/วิดีโอ">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#45bd62" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none" onchange="handleFiles(event)">
+          </label>
+          <div class="atp-ic" onclick="toast('เพิ่มความรู้สึก')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f7b928" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9" stroke-width="3"/><line x1="15" y1="9" x2="15.01" y2="9" stroke-width="3"/></svg></div>
+          <div class="atp-ic" onclick="toast('เพิ่มสถานที่')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e41e3f" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        </div>
+      </div>
+      <button class="btn-post" id="postBtn" disabled onclick="submitPost()">โพสต์</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end appScreen -->
+
+<div class="toast" id="toastEl"></div>
+
+<script type="module">
+// ── Import Supabase (CDN) ──
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+// ─────────────────────────────────────────────
+//  CONFIG — แก้ค่านี้ด้วย Project ของคุณ
+// ─────────────────────────────────────────────
+const SUPA_URL = 'https://jjakewohlrhzjpqmeaox.supabase.co'
+const SUPA_KEY = 'sb_publishable_IjMLYbGme6mK4tlTqc4Tqw_eLMwuQy8'
+const sb = createClient(SUPA_URL, SUPA_KEY)
+
+// ── State ──
+let ME = null
+let currentTab = 'feed'
+let feedPage = 0, explorePage = 0
+let feedPosts = [], explorePosts = []
+let notifOpen = false
+let selectedFiles = []
+
+// ── Avatar color helper ──
+const avColors = ['av0','av1','av2','av3','av4','av5','av6','av7']
+function avClass(str){ return avColors[(str||'').charCodeAt(0)%8] }
+function initials(name){ return (name||'?').charAt(0).toUpperCase() }
+
+// ── Toast ──
+window.toast = function(msg){
+  const el=document.getElementById('toastEl')
+  el.textContent=msg; el.classList.add('show')
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2500)
+}
+
+// ─────────────────────────────────────────────
+//  AUTH
+// ─────────────────────────────────────────────
+window.showRegister=()=>{document.getElementById('loginBox').style.display='none';document.getElementById('registerBox').style.display='block'}
+window.showLogin=()=>{document.getElementById('registerBox').style.display='none';document.getElementById('loginBox').style.display='block'}
+
+window.doLogin = async()=>{
+  const email=document.getElementById('loginEmail').value.trim()
+  const pw=document.getElementById('loginPw').value
+  const err=document.getElementById('loginErr')
+  err.classList.remove('show')
+  const {data,error} = await sb.auth.signInWithPassword({email,password:pw})
+  if(error){err.textContent=error.message;err.classList.add('show');return}
+  await bootApp(data.user)
+}
+
+window.doRegister = async()=>{
+  const name=document.getElementById('regName').value.trim()
+  const user=document.getElementById('regUser').value.trim().toLowerCase().replace(/\s/g,'')
+  const email=document.getElementById('regEmail').value.trim()
+  const pw=document.getElementById('regPw').value
+  const err=document.getElementById('regErr')
+  err.classList.remove('show')
+  if(!name||!user||!email||!pw){err.textContent='กรุณากรอกข้อมูลให้ครบ';err.classList.add('show');return}
+  const {data,error} = await sb.auth.signUp({email,password:pw,options:{data:{username:user,full_name:name}}})
+  if(error){err.textContent=error.message;err.classList.add('show');return}
+  toast('สมัครสมาชิกสำเร็จ! กรุณายืนยันอีเมลของคุณ')
+  showLogin()
+}
+
+window.doLogout = async()=>{
+  await sb.auth.signOut()
+  ME=null
+  document.getElementById('appScreen').style.display='none'
+  document.getElementById('authScreen').style.display='flex'
+}
+
+// Auto-login if session exists
+sb.auth.onAuthStateChange(async(_,session)=>{
+  if(session?.user && !ME) await bootApp(session.user)
+})
+
+async function bootApp(user){
+  const {data:profile} = await sb.from('profiles').select('*').eq('id',user.id).single()
+  ME = {...user, ...profile}
+  document.getElementById('authScreen').style.display='none'
+  document.getElementById('appScreen').style.display='block'
+  // Update UI with user info
+  const av=document.getElementById('navAvatar')
+  const lav=document.getElementById('leftAvatar')
+  const c=avClass(ME.username)
+  av.className=`nav-av ${c}`; av.textContent=initials(ME.display_name)
+  lav.className=`ni-icon ${c}`; lav.textContent=initials(ME.display_name)
+  document.getElementById('leftName').textContent=ME.display_name||ME.username
+  document.getElementById('modalAvatar').className=`cav ${c}`
+  document.getElementById('modalAvatar').textContent=initials(ME.display_name)
+  document.getElementById('modalName').textContent=ME.display_name||ME.username
+  loadFeed()
+  loadNotifCount()
+  loadSuggestions()
+  subscribeNotif()
+  loadDMBadge()
+}
+
+// ─────────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────────
+window.setTab=function(el,tab){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'))
+  el.classList.add('active')
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'))
+  currentTab=tab
+  feedPage=0; explorePage=0
+  const main=document.getElementById('mainContent')
+  if(tab==='feed'){loadFeed()}
+  else if(tab==='explore'){loadExplore()}
+  else if(tab==='saved'){loadSaved()}
+  else if(tab==='profile'){loadProfile()}
+  else if(tab==='dm'){loadDM()}
+}
+
+// ─────────────────────────────────────────────
+//  FEED
+// ─────────────────────────────────────────────
+async function loadFeed(append=false){
+  const main=document.getElementById('mainContent')
+  if(!append){main.innerHTML='';feedPage=0;feedPosts=[]}
+  main.insertAdjacentHTML('beforeend','<div class="loading" id="feedLoader">กำลังโหลด...</div>')
+  // Get following IDs first
+  const {data:fol}=await sb.from('follows').select('following_id').eq('follower_id',ME.id)
+  const ids=[ME.id,...(fol||[]).map(f=>f.following_id)]
+  const {data,error}=await sb.from('posts')
+    .select(`id,user_id,content,image_urls,video_url,privacy,is_shared,original_post_id,created_at,
+      profiles:user_id(id,username,display_name,avatar_url),
+      post_likes(count),comments(count),shares(count)`)
+    .in('user_id',ids)
+    .order('created_at',{ascending:false})
+    .range(feedPage*10,feedPage*10+9)
+  document.getElementById('feedLoader')?.remove()
+  if(!append){
+    // Stories + Create Post
+    main.innerHTML=storiesHTML()+createPostHTML()
+  }
+  if(error){main.insertAdjacentHTML('beforeend','<div class="loading">โหลดไม่สำเร็จ</div>');return}
+  if(!data||data.length===0 && feedPage===0){main.insertAdjacentHTML('beforeend','<div class="card" style="padding:32px;text-align:center;color:var(--muted)">ยังไม่มีโพสต์ — ติดตามเพื่อนเพื่อเห็นโพสต์ในฟีดของคุณ</div>');return}
+  // Check is_liked and is_saved for each post
+  const postIds=(data||[]).map(p=>p.id)
+  const {data:liked}=await sb.from('post_likes').select('post_id').eq('user_id',ME.id).in('post_id',postIds)
+  const {data:savedP}=await sb.from('saved_posts').select('post_id').eq('user_id',ME.id).in('post_id',postIds)
+  const likedSet=new Set((liked||[]).map(l=>l.post_id))
+  const savedSet=new Set((savedP||[]).map(s=>s.post_id))
+  ;(data||[]).forEach(p=>{
+    p.is_liked=likedSet.has(p.id)
+    p.is_saved=savedSet.has(p.id)
+    main.insertAdjacentHTML('beforeend',postHTML(p))
+  })
+  feedPosts=[...feedPosts,...(data||[])]
+  if(data&&data.length===10){
+    feedPage++
+    main.insertAdjacentHTML('beforeend',`<button onclick="loadFeed(true)" style="width:100%;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px">โหลดเพิ่มเติม</button>`)
+  }
+}
+
+async function loadExplore(append=false){
+  const main=document.getElementById('mainContent')
+  if(!append){main.innerHTML='<div style="font-size:20px;font-weight:700;margin-bottom:12px">🔍 สำรวจ</div>';explorePage=0}
+  main.insertAdjacentHTML('beforeend','<div class="loading" id="explLoader">กำลังโหลด...</div>')
+  const {data,error}=await sb.from('posts')
+    .select(`id,user_id,content,image_urls,video_url,privacy,created_at,
+      profiles:user_id(id,username,display_name,avatar_url),
+      post_likes(count),comments(count),shares(count)`)
+    .eq('privacy','public')
+    .order('created_at',{ascending:false})
+    .range(explorePage*15,explorePage*15+14)
+  document.getElementById('explLoader')?.remove()
+  if(error){main.insertAdjacentHTML('beforeend','<div class="loading">โหลดไม่สำเร็จ</div>');return}
+  const postIds=(data||[]).map(p=>p.id)
+  const {data:liked}=await sb.from('post_likes').select('post_id').eq('user_id',ME.id).in('post_id',postIds)
+  const {data:savedP}=await sb.from('saved_posts').select('post_id').eq('user_id',ME.id).in('post_id',postIds)
+  const likedSet=new Set((liked||[]).map(l=>l.post_id))
+  const savedSet=new Set((savedP||[]).map(s=>s.post_id))
+  ;(data||[]).forEach(p=>{p.is_liked=likedSet.has(p.id);p.is_saved=savedSet.has(p.id);main.insertAdjacentHTML('beforeend',postHTML(p))})
+  if(data&&data.length===15){explorePage++;main.insertAdjacentHTML('beforeend',`<button onclick="loadExplore(true)" style="width:100%;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px">โหลดเพิ่มเติม</button>`)}
+}
+
+async function loadSaved(){
+  const main=document.getElementById('mainContent')
+  main.innerHTML='<div style="font-size:20px;font-weight:700;margin-bottom:12px">🔖 รายการที่บันทึก</div>'
+  const {data}=await sb.from('saved_posts').select('post_id,posts(id,user_id,content,image_urls,video_url,privacy,created_at,profiles:user_id(id,username,display_name,avatar_url),post_likes(count),comments(count),shares(count))').eq('user_id',ME.id).order('created_at',{ascending:false})
+  if(!data||data.length===0){main.insertAdjacentHTML('beforeend','<div class="card" style="padding:32px;text-align:center;color:var(--muted)">ยังไม่มีโพสต์ที่บันทึก</div>');return}
+  data.forEach(s=>{const p={...s.posts,is_saved:true};main.insertAdjacentHTML('beforeend',postHTML(p))})
+}
+
+async function loadProfile(){
+  const main=document.getElementById('mainContent')
+  main.innerHTML='<div class="loading">กำลังโหลด...</div>'
+  const {data:prof}=await sb.from('profiles').select('*').eq('id',ME.id).single()
+  const {data:posts}=await sb.from('posts').select('id,user_id,content,image_urls,video_url,privacy,created_at,post_likes(count),comments(count),shares(count)').eq('user_id',ME.id).order('created_at',{ascending:false})
+  const {count:flers}=await sb.from('follows').select('id',{count:'exact'}).eq('following_id',ME.id)
+  const {count:fling}=await sb.from('follows').select('id',{count:'exact'}).eq('follower_id',ME.id)
+  const c=avClass(prof.username)
+  main.innerHTML=`
+    <div class="card" style="margin-bottom:12px">
+      <div style="height:180px;background:linear-gradient(135deg,#1877f2,#42b72a);border-radius:var(--r-lg) var(--r-lg) 0 0"></div>
+      <div style="padding:0 16px 16px;position:relative">
+        <div class="${c}" style="width:80px;height:80px;border-radius:50%;border:4px solid #fff;margin-top:-40px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff">${initials(prof.display_name)}</div>
+        <div style="font-size:22px;font-weight:700;margin-top:8px">${prof.display_name||prof.username}</div>
+        <div style="color:var(--muted);margin-bottom:8px">@${prof.username}</div>
+        ${prof.bio?`<div style="margin-bottom:8px">${prof.bio}</div>`:''}
+        <div style="display:flex;gap:24px;font-size:15px">
+          <div><strong>${flers||0}</strong> <span style="color:var(--muted)">ผู้ติดตาม</span></div>
+          <div><strong>${fling||0}</strong> <span style="color:var(--muted)">กำลังติดตาม</span></div>
+          <div><strong>${posts?.length||0}</strong> <span style="color:var(--muted)">โพสต์</span></div>
+        </div>
+      </div>
+    </div>`
+  if(!posts||posts.length===0){main.insertAdjacentHTML('beforeend','<div class="card" style="padding:32px;text-align:center;color:var(--muted)">ยังไม่มีโพสต์</div>');return}
+  posts.forEach(p=>{p.profiles={...prof};main.insertAdjacentHTML('beforeend',postHTML(p))})
+}
+
+// ─────────────────────────────────────────────
+//  STORIES HTML
+// ─────────────────────────────────────────────
+function storiesHTML(){
+  const c=avClass(ME?.username)
+  return `<div class="card" style="margin-bottom:12px"><div class="stories-row">
+    <div class="s-card" onclick="toast('อัปโหลดสตอรี่ไม่ได้ในเวอร์ชันนี้ — เชื่อมต่อ Supabase ก่อน')">
+      <div class="s-bg" style="background:linear-gradient(135deg,#74b9ff,#0984e3)">📷</div>
+      <div class="s-grad"></div>
+      <div class="s-add">+</div>
+      <div class="s-name">สร้างสตอรี่</div>
+    </div>
+  </div></div>`
+}
+
+// ─────────────────────────────────────────────
+//  CREATE POST HTML
+// ─────────────────────────────────────────────
+function createPostHTML(){
+  const c=avClass(ME?.username)
+  return `<div class="card" style="margin-bottom:12px">
+    <div class="cp">
+      <div class="cp-row">
+        <div class="cp-av ${c}">${initials(ME?.display_name)}</div>
+        <button class="cp-inp" onclick="openCreate()">คุณกำลังคิดอะไรอยู่?</button>
+      </div>
+      <div class="cp-div"></div>
+      <div class="cp-acts">
+        <button class="cp-act" onclick="openCreate()">📹 วิดีโอสด</button>
+        <button class="cp-act" onclick="openCreate()">🖼️ รูปภาพ</button>
+        <button class="cp-act" onclick="openCreate()">😊 ความรู้สึก</button>
+      </div>
+    </div>
+  </div>`
+}
+
+// ─────────────────────────────────────────────
+//  POST HTML
+// ─────────────────────────────────────────────
+function postHTML(p){
+  const pr=p.profiles||{}
+  const c=avClass(pr.username)
+  const lc=p.post_likes?.[0]?.count||0
+  const cc=p.comments?.[0]?.count||0
+  const sc=p.shares?.[0]?.count||0
+  const timeAgo=relTime(p.created_at)
+  const privIcon=p.privacy==='public'?'🌐':p.privacy==='followers'?'👥':'🔒'
+  let mediaHTML=''
+  if(p.image_urls&&p.image_urls.length>0){
+    if(p.image_urls.length===1) mediaHTML=`<img class="pimg" src="${p.image_urls[0]}" alt="">`
+    else mediaHTML=`<div class="pimg-grid g2">${p.image_urls.map(u=>`<img class="pimg" src="${u}" alt="">`).join('')}</div>`
+  }
+  return `<div class="card" data-id="${p.id}">
+    <div class="ph">
+      <div class="pav ${c}">${initials(pr.display_name)}</div>
+      <div>
+        <div class="pauth">${pr.display_name||pr.username||'ผู้ใช้'}</div>
+        <div class="pmeta">${timeAgo} · ${privIcon}</div>
+      </div>
+      ${p.user_id===ME?.id?`<div class="pmenu" onclick="deletePost('${p.id}',this)">⋯</div>`:'<div class="pmenu" onclick="toast(\'บันทึกโพสต์\')">⋯</div>'}
+    </div>
+    ${p.content?`<div class="pbody">${p.content.replace(/</g,'&lt;')}</div>`:''}
+    ${mediaHTML}
+    <div class="preact">
+      <div class="preact-sum" onclick="toast('ดูรายชื่อผู้กดถูกใจ')">
+        ${lc>0?`<div class="remojis"><div class="re re-b">👍</div>${p.is_liked?'<div class="re re-r">❤️</div>':''}</div><span>${lc} คน</span>`:'<span style="color:var(--muted)">เป็นคนแรกที่กดถูกใจ</span>'}
+      </div>
+      <div class="pstats">
+        <span onclick="toggleCmt('cmt-${p.id}')">${cc} ความคิดเห็น</span>
+        ${sc>0?`<span>${sc} แชร์</span>`:''}
+      </div>
+    </div>
+    <div class="pbar">
+      <button class="pact${p.is_liked?' liked':''}" onclick="toggleLike(this,'${p.id}','${p.user_id}')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="${p.is_liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+        ${p.is_liked?'ถูกใจแล้ว':'ถูกใจ'}
+      </button>
+      <button class="pact" onclick="toggleCmt('cmt-${p.id}')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        ความคิดเห็น
+      </button>
+      <button class="pact${p.is_saved?' saved':''}" onclick="toggleSave(this,'${p.id}')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="${p.is_saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        ${p.is_saved?'บันทึกแล้ว':'บันทึก'}
+      </button>
+    </div>
+    <div class="csect" id="cmt-${p.id}" style="display:none">
+      <div class="ci-row">
+        <div class="cav ${avClass(ME?.username)}">${initials(ME?.display_name)}</div>
+        <div class="ci-wrap">
+          <input type="text" placeholder="แสดงความคิดเห็น..." onkeydown="if(event.key==='Enter')submitCmt(event,'${p.id}','${p.user_id}',this)">
+          <span style="cursor:pointer;font-size:18px">😊</span>
+        </div>
+      </div>
+      <div id="cmts-${p.id}"></div>
+    </div>
+  </div>`
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+window.toggleLike=async function(btn,postId,ownerId){
+  const liked=btn.classList.contains('liked')
+  // Optimistic
+  btn.classList.toggle('liked')
+  const svgPath=btn.querySelector('svg path:first-child')
+  svgPath.setAttribute('fill',liked?'none':'currentColor')
+  btn.childNodes[btn.childNodes.length-1].textContent=liked?' ถูกใจ':' ถูกใจแล้ว'
+  if(liked){
+    await sb.from('post_likes').delete().eq('post_id',postId).eq('user_id',ME.id)
+  } else {
+    const {error}=await sb.from('post_likes').insert({post_id:postId,user_id:ME.id})
+    if(!error && ownerId!==ME.id){
+      await sb.rpc('create_notification',{p_type:'like_post',p_actor_id:ME.id,p_target_id:ownerId,p_post_id:postId}).catch(()=>{})
+    }
+    if(error){btn.classList.remove('liked');svgPath.setAttribute('fill','none')}
+  }
+}
+
+window.toggleSave=async function(btn,postId){
+  const s=btn.classList.contains('saved')
+  btn.classList.toggle('saved')
+  const svg=btn.querySelector('svg')
+  svg.setAttribute('fill',s?'none':'currentColor')
+  btn.lastChild.textContent=s?' บันทึก':' บันทึกแล้ว'
+  if(s){await sb.from('saved_posts').delete().eq('post_id',postId).eq('user_id',ME.id);toast('ยกเลิกการบันทึก')}
+  else{await sb.from('saved_posts').insert({post_id:postId,user_id:ME.id});toast('บันทึกแล้ว ✓')}
+}
+
+window.toggleCmt=function(id){
+  const el=document.getElementById(id)
+  const open=el.style.display==='block'
+  el.style.display=open?'none':'block'
+  if(!open){el.querySelector('input')?.focus();loadCmts(id.replace('cmt-',''))}
+}
+
+async function loadCmts(postId){
+  const container=document.getElementById('cmts-'+postId)
+  if(container.dataset.loaded) return
+  container.dataset.loaded='1'
+  const {data}=await sb.from('comments')
+    .select('*,profiles:user_id(id,username,display_name,avatar_url)')
+    .eq('post_id',postId).is('parent_id',null).order('created_at',{ascending:true})
+  if(!data||data.length===0) return
+  data.forEach(c=>{container.insertAdjacentHTML('beforeend',cmtHTML(c))})
+}
+
+function cmtHTML(c){
+  const pr=c.profiles||{}
+  const cls=avClass(pr.username)
+  return `<div class="cmt">
+    <div class="cav ${cls}">${initials(pr.display_name)}</div>
+    <div>
+      <div class="cbub">
+        <div class="caut">${pr.display_name||pr.username}</div>
+        <div class="ctxt">${c.content.replace(/</g,'&lt;')}</div>
+      </div>
+      <div class="cft">
+        <span onclick="this.classList.toggle('cl');this.textContent=this.classList.contains('cl')?'ถูกใจแล้ว':'ถูกใจ'">ถูกใจ</span>
+        <span>ตอบกลับ</span>
+        <span style="font-weight:400;color:var(--muted)">${relTime(c.created_at)}</span>
+      </div>
+    </div>
+  </div>`
+}
+
+window.submitCmt=async function(e,postId,ownerId,input){
+  const txt=input.value.trim(); if(!txt) return
+  input.value=''
+  const {data,error}=await sb.from('comments').insert({post_id:postId,user_id:ME.id,content:txt}).select('*,profiles:user_id(id,username,display_name,avatar_url)').single()
+  if(error){toast('ส่งความคิดเห็นไม่สำเร็จ');return}
+  document.getElementById('cmts-'+postId).insertAdjacentHTML('beforeend',cmtHTML(data))
+  if(ownerId!==ME.id) await sb.rpc('create_notification',{p_type:'comment',p_actor_id:ME.id,p_target_id:ownerId,p_post_id:postId,p_comment_id:data.id}).catch(()=>{})
+  toast('แสดงความคิดเห็นแล้ว ✓')
+}
+
+window.deletePost=async function(postId,btn){
+  if(!confirm('ลบโพสต์นี้?')) return
+  const {error}=await sb.from('posts').delete().eq('id',postId)
+  if(error){toast('ลบไม่สำเร็จ');return}
+  btn.closest('.card').remove(); toast('ลบโพสต์แล้ว')
+}
+
+// ─────────────────────────────────────────────
+//  CREATE POST
+// ─────────────────────────────────────────────
+window.openCreate=()=>document.getElementById('createModal').classList.add('open')
+window.closeCreate=()=>{document.getElementById('createModal').classList.remove('open');document.getElementById('postContent').value='';document.getElementById('previewImgs').innerHTML='';selectedFiles=[];document.getElementById('postBtn').disabled=true}
+
+window.handleFiles=function(e){
+  selectedFiles=[...e.target.files]
+  const prev=document.getElementById('previewImgs'); prev.innerHTML=''
+  selectedFiles.slice(0,4).forEach(f=>{
+    const url=URL.createObjectURL(f)
+    prev.insertAdjacentHTML('beforeend',`<img src="${url}" alt="">`)
+  })
+  document.getElementById('postBtn').disabled=false
+}
+
+window.submitPost=async function(){
+  const content=document.getElementById('postContent').value.trim()
+  const privacy=document.getElementById('postPrivacy').value
+  const btn=document.getElementById('postBtn')
+  btn.disabled=true; btn.textContent='กำลังโพสต์...'
+  // Upload images
+  const imageUrls=[]
+  for(const file of selectedFiles){
+    if(!file.type.startsWith('image/')) continue
+    const path=`${ME.id}/${Date.now()}-${file.name}`
+    const {error}=await sb.storage.from('post-images').upload(path,file)
+    if(!error){const {data:{publicUrl}}=sb.storage.from('post-images').getPublicUrl(path);imageUrls.push(publicUrl)}
+  }
+  const {data,error}=await sb.from('posts')
+    .insert({user_id:ME.id,content:content||null,image_urls:imageUrls,privacy})
+    .select('*,profiles:user_id(id,username,display_name,avatar_url),post_likes(count),comments(count),shares(count)')
+    .single()
+  btn.disabled=false; btn.textContent='โพสต์'
+  if(error){toast('โพสต์ไม่สำเร็จ: '+error.message);return}
+  closeCreate()
+  data.is_liked=false; data.is_saved=false
+  const main=document.getElementById('mainContent')
+  const createCard=main.querySelector('.card:nth-child(2)')
+  createCard.insertAdjacentHTML('afterend',postHTML(data))
+  toast('โพสต์สำเร็จ! ✅')
+}
+
+// ─────────────────────────────────────────────
+//  NOTIFICATIONS
+// ─────────────────────────────────────────────
+window.toggleNotif=async function(){
+  notifOpen=!notifOpen
+  const p=document.getElementById('notifPanel')
+  p.style.display=notifOpen?'block':'none'
+  if(notifOpen) loadNotifs()
+}
+document.addEventListener('click',e=>{
+  if(notifOpen&&!e.target.closest('.nav-acts')){notifOpen=false;document.getElementById('notifPanel').style.display='none'}
+})
+
+async function loadNotifCount(){
+  const {data,error}=await sb.from('notifications').select('id',{count:'exact'}).eq('target_id',ME.id).eq('is_read',false)
+  const count=data?.length||0
+  const badge=document.getElementById('notifBadge')
+  badge.style.display=count>0?'flex':'none'; badge.textContent=count>9?'9+':count
+}
+
+async function loadNotifs(){
+  const list=document.getElementById('notifList')
+  const {data}=await sb.from('notifications')
+    .select('*,actor:actor_id(id,username,display_name,avatar_url)')
+    .eq('target_id',ME.id).order('created_at',{ascending:false}).limit(20)
+  if(!data||data.length===0){list.innerHTML='<div class="loading">ยังไม่มีการแจ้งเตือน</div>';return}
+  const typeLabel={'like_post':'กดถูกใจโพสต์ของคุณ','like_comment':'กดถูกใจความคิดเห็น','comment':'แสดงความคิดเห็นในโพสต์ของคุณ','reply':'ตอบกลับความคิดเห็นของคุณ','follow':'เริ่มติดตามคุณแล้ว','share':'แชร์โพสต์ของคุณ','mention':'แท็กถึงคุณ'}
+  const typeIcon={'like_post':'nt-l','like_comment':'nt-l','comment':'nt-c','reply':'nt-c','follow':'nt-f','share':'nt-s','mention':'nt-c'}
+  const typeEmoji={'like_post':'❤️','like_comment':'❤️','comment':'💬','reply':'💬','follow':'👤','share':'🔁','mention':'🏷️'}
+  list.innerHTML=data.map(n=>{
+    const ac=n.actor||{};const cls=avClass(ac.username)
+    return `<div class="np-item${n.is_read?'':' unread'}">
+      <div class="np-av">
+        <div class="${cls}" style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff">${initials(ac.display_name)}</div>
+        <div class="np-type ${typeIcon[n.type]||'nt-c'}">${typeEmoji[n.type]||'🔔'}</div>
+      </div>
+      <div class="np-txt">
+        <p><strong>${ac.display_name||ac.username||'ผู้ใช้'}</strong> ${typeLabel[n.type]||'แจ้งเตือน'}</p>
+        <div class="np-time">${relTime(n.created_at)}</div>
+      </div>
+      ${n.is_read?'':'<div class="np-dot"></div>'}
+    </div>`}).join('')
+}
+
+window.markAllRead=async function(){
+  await sb.from('notifications').update({is_read:true}).eq('target_id',ME.id).eq('is_read',false)
+  document.getElementById('notifBadge').style.display='none'
+  loadNotifs()
+}
+
+function subscribeNotif(){
+  sb.channel('notif-'+ME.id)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`target_id=eq.${ME.id}`},()=>{
+      loadNotifCount()
+      if(notifOpen) loadNotifs()
+    }).subscribe()
+}
+
+// ─────────────────────────────────────────────
+//  SUGGESTIONS & CONTACTS
+// ─────────────────────────────────────────────
+async function loadSuggestions(){
+  const {data:fol}=await sb.from('follows').select('following_id').eq('follower_id',ME.id)
+  const excludeIds=[ME.id,...(fol||[]).map(f=>f.following_id)]
+  const {data}=await sb.from('profiles').select('id,username,display_name,avatar_url').not('id','in',`(${excludeIds.join(',')})`).limit(5)
+  const list=document.getElementById('suggestionList')
+  if(!data||data.length===0){list.innerHTML='<div style="padding:8px;color:var(--muted);font-size:14px">ไม่มีคำแนะนำ</div>';return}
+  list.innerHTML=data.map(p=>{
+    const c=avClass(p.username)
+    return `<div class="sug-item">
+      <div class="sug-av ${c}">${initials(p.display_name)}</div>
+      <div class="sug-info">
+        <div class="sug-name">${p.display_name||p.username}</div>
+        <div class="sug-mut">@${p.username}</div>
+        <button class="btn-follow" onclick="doFollow(this,'${p.id}')">+ ติดตาม</button>
+      </div>
+    </div>`}).join('')
+  // Contacts = following
+  const clist=document.getElementById('contactList')
+  if(!fol||fol.length===0){clist.innerHTML='<div style="padding:8px;color:var(--muted);font-size:14px">ยังไม่ได้ติดตามใคร</div>';return}
+  const {data:contacts}=await sb.from('profiles').select('id,username,display_name').in('id',fol.map(f=>f.following_id))
+  clist.innerHTML=(contacts||[]).map(p=>{
+    const c=avClass(p.username)
+    return `<div class="contact-item"><div class="c-av ${c}">${initials(p.display_name)}<div class="c-dot"></div></div><div>${p.display_name||p.username}</div></div>`}).join('')
+}
+
+window.doFollow=async function(btn,targetId){
+  const {error}=await sb.from('follows').insert({follower_id:ME.id,following_id:targetId})
+  if(error){toast('ติดตามไม่สำเร็จ');return}
+  btn.textContent='✓ ติดตามแล้ว'; btn.style.cssText='background:#e4e6eb;color:var(--text);border:none;border-radius:8px;padding:6px 16px;font-size:14px;font-weight:600'
+  await sb.rpc('create_notification',{p_type:'follow',p_actor_id:ME.id,p_target_id:targetId}).catch(()=>{})
+  toast('ติดตามแล้ว ✓')
+}
+
+// ─────────────────────────────────────────────
+//  SEARCH
+// ─────────────────────────────────────────────
+let searchTimer
+window.doSearch=function(){
+  clearTimeout(searchTimer)
+  const q=document.getElementById('searchInput').value.trim()
+  const res=document.getElementById('searchRes')
+  if(!q){res.innerHTML='';return}
+  searchTimer=setTimeout(async()=>{
+    const {data}=await sb.from('profiles').select('id,username,display_name,avatar_url').or(`username.ilike.%${q}%,display_name.ilike.%${q}%`).limit(8)
+    if(!data||data.length===0){res.innerHTML='<div class="srch-item" style="color:var(--muted)">ไม่พบผลลัพธ์</div>';return}
+    res.innerHTML=data.map(p=>{const c=avClass(p.username);return `<div class="srch-item" onclick="toast('โปรไฟล์: ${p.display_name}')"><div class="cav ${c}" style="width:36px;height:36px;font-size:14px;font-weight:700">${initials(p.display_name)}</div><div><div style="font-weight:600">${p.display_name||p.username}</div><div style="font-size:12px;color:var(--muted)">@${p.username}</div></div></div>`}).join('')
+  },300)
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function relTime(iso){
+  const s=Math.floor((Date.now()-new Date(iso))/1000)
+  if(s<60) return 'เมื่อกี้'
+  if(s<3600) return Math.floor(s/60)+' นาทีที่แล้ว'
+  if(s<86400) return Math.floor(s/3600)+' ชั่วโมงที่แล้ว'
+  if(s<604800) return Math.floor(s/86400)+' วันที่แล้ว'
+  return new Date(iso).toLocaleDateString('th-TH')
+}
+
+// ─────────────────────────────────────────────
+//  DM — Direct Messages
+// ─────────────────────────────────────────────
+let activeChatId = null
+let activePeer   = null
+let dmChannel    = null
+let dmImgFile    = null
+
+async function loadDM() {
+  const main = document.getElementById('mainContent')
+  main.innerHTML = `
+    <div class="dm-wrap" id="dmWrap">
+      <div class="dm-sidebar" id="dmSidebar">
+        <div class="dm-sidebar-hd">
+          <span>ข้อความ</span>
+          <button class="dm-new-btn" onclick="openNewChat()" title="ข้อความใหม่">✏️</button>
+        </div>
+        <div class="dm-search"><input type="text" placeholder="ค้นหาการสนทนา" oninput="filterConvs(this.value)"></div>
+        <div class="dm-list" id="convList"><div class="loading">กำลังโหลด...</div></div>
+      </div>
+      <div class="dm-main" id="dmMain">
+        <div class="dm-empty">
+          <div class="dm-empty-icon">💬</div>
+          <div style="font-size:20px;font-weight:700">ข้อความของคุณ</div>
+          <div style="font-size:15px">เลือกการสนทนาหรือเริ่มใหม่</div>
+          <button onclick="openNewChat()" style="background:var(--blue);color:#fff;border:none;border-radius:var(--r);padding:10px 20px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px">ส่งข้อความใหม่</button>
+        </div>
+      </div>
+    </div>`
+  await fetchConvList()
+  loadDMBadge()
+}
+
+let allConvs = []
+async function fetchConvList() {
+  const { data } = await sb
+    .from('conversations')
+    .select(`*, user1:user1_id(id,username,display_name,avatar_url), user2:user2_id(id,username,display_name,avatar_url)`)
+    .or(`user1_id.eq.${ME.id},user2_id.eq.${ME.id}`)
+    .order('last_message_at', { ascending: false })
+  allConvs = data || []
+  renderConvList(allConvs)
+}
+
+function renderConvList(convs) {
+  const list = document.getElementById('convList')
+  if (!list) return
+  if (!convs || convs.length === 0) {
+    list.innerHTML = '<div class="loading" style="padding:16px">ยังไม่มีการสนทนา</div>'
+    return
+  }
+  list.innerHTML = convs.map(c => {
+    const peer = c.user1_id === ME.id ? c.user2 : c.user1
+    const cls  = avClass(peer?.username)
+    const time = c.last_message_at ? relTime(c.last_message_at) : ''
+    return `<div class="dm-conv-item${activeChatId===c.id?' active':''}" onclick="openChat('${c.id}','${peer.id}','${peer.display_name||peer.username}','${cls}')">
+      <div class="dm-conv-av ${cls}">${initials(peer?.display_name)}</div>
+      <div class="dm-conv-info">
+        <div class="dm-conv-name">${peer?.display_name||peer?.username}</div>
+        <div class="dm-conv-last">${c.last_message||'เริ่มการสนทนา'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span class="dm-conv-time">${time}</span>
+      </div>
+    </div>`
+  }).join('')
+}
+
+window.filterConvs = function(q) {
+  if (!q) { renderConvList(allConvs); return }
+  const filtered = allConvs.filter(c => {
+    const peer = c.user1_id === ME.id ? c.user2 : c.user1
+    return (peer?.display_name||'').toLowerCase().includes(q.toLowerCase())
+      || (peer?.username||'').toLowerCase().includes(q.toLowerCase())
+  })
+  renderConvList(filtered)
+}
+
+async function openChat(convId, peerId, peerName, peerCls) {
+  activeChatId = convId
+  activePeer   = { id: peerId, name: peerName, cls: peerCls }
+  dmImgFile    = null
+
+  // Unsubscribe old channel
+  if (dmChannel) sb.removeChannel(dmChannel)
+
+  // Mark sidebar item active
+  document.querySelectorAll('.dm-conv-item').forEach(el => el.classList.remove('active'))
+  event?.currentTarget?.classList?.add('active')
+
+  const dmMain = document.getElementById('dmMain')
+  dmMain.classList.add('open')
+  dmMain.innerHTML = `
+    <div class="dm-main-hd">
+      <button class="dm-back-btn" onclick="backToList()">←</button>
+      <div class="dm-main-av ${peerCls}">${initials(peerName)}</div>
+      <div>
+        <div class="dm-main-name">${peerName}</div>
+        <div class="dm-main-status">ออนไลน์</div>
+      </div>
+    </div>
+    <div class="dm-messages" id="dmMsgs"><div class="loading">กำลังโหลด...</div></div>
+    <div id="imgPreviewBar"></div>
+    <div class="dm-input-wrap">
+      <label style="cursor:pointer;font-size:22px;color:var(--muted)" title="แนบรูปภาพ">
+        🖼️
+        <input type="file" id="dmImgInput" accept="image/*" style="display:none" onchange="previewDMImg(event)">
+      </label>
+      <div class="dm-input-inner">
+        <input type="text" id="dmInput" placeholder="พิมพ์ข้อความ..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <span style="cursor:pointer;font-size:18px" onclick="toast('เพิ่มอิโมจิ')">😊</span>
+      </div>
+      <button class="dm-send-btn" onclick="sendMsg()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>`
+
+  await fetchMessages(convId)
+  subscribeDM(convId)
+
+  // Mark messages as read
+  await sb.from('messages')
+    .update({ is_read: true })
+    .eq('conversation_id', convId)
+    .neq('sender_id', ME.id)
+  loadDMBadge()
+
+  document.getElementById('dmInput')?.focus()
+}
+
+async function fetchMessages(convId) {
+  const { data } = await sb
+    .from('messages')
+    .select('*')
+    .eq('conversation_id', convId)
+    .order('created_at', { ascending: true })
+  const container = document.getElementById('dmMsgs')
+  if (!container) return
+  container.innerHTML = ''
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px">เริ่มการสนทนากันเลย 👋</div>'
+    return
+  }
+  data.forEach(m => container.insertAdjacentHTML('beforeend', msgHTML(m)))
+  container.scrollTop = container.scrollHeight
+}
+
+function msgHTML(m) {
+  const isMe = m.sender_id === ME.id
+  const cls  = isMe ? avClass(ME.username) : (activePeer?.cls||'av0')
+  const av   = isMe ? initials(ME.display_name) : initials(activePeer?.name)
+  return `<div class="dm-msg ${isMe?'me':'them'}">
+    <div class="dm-msg-av ${cls}">${av}</div>
+    <div>
+      ${m.image_url ? `<img class="dm-msg-img" src="${m.image_url}" onclick="window.open('${m.image_url}','_blank')">` : ''}
+      ${m.content   ? `<div class="dm-bubble">${m.content.replace(/</g,'&lt;')}</div>` : ''}
+      <div class="dm-msg-time">${relTime(m.created_at)}</div>
+    </div>
+  </div>`
+}
+
+function subscribeDM(convId) {
+  dmChannel = sb.channel('dm-' + convId)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public',
+      table: 'messages', filter: `conversation_id=eq.${convId}`
+    }, async payload => {
+      const m = payload.new
+      if (m.sender_id === ME.id) return // เราส่งเองแล้ว optimistic
+      const container = document.getElementById('dmMsgs')
+      if (container) {
+        container.insertAdjacentHTML('beforeend', msgHTML(m))
+        container.scrollTop = container.scrollHeight
+      }
+      // Update last message in sidebar
+      await fetchConvList()
+      // Mark read
+      await sb.from('messages').update({ is_read: true }).eq('id', m.id)
+    })
+    .subscribe()
+}
+
+window.previewDMImg = function(e) {
+  dmImgFile = e.target.files[0]
+  if (!dmImgFile) return
+  const bar = document.getElementById('imgPreviewBar')
+  const url = URL.createObjectURL(dmImgFile)
+  bar.innerHTML = `<div class="img-preview-bar">
+    <img src="${url}" alt="">
+    <button class="rm-img" onclick="removeDMImg()">✕</button>
+  </div>`
+}
+
+window.removeDMImg = function() {
+  dmImgFile = null
+  document.getElementById('imgPreviewBar').innerHTML = ''
+  document.getElementById('dmImgInput').value = ''
+}
+
+window.sendMsg = async function() {
+  const input = document.getElementById('dmInput')
+  const txt   = input?.value?.trim()
+  if (!txt && !dmImgFile) return
+
+  input.value = ''
+  const btn = document.querySelector('.dm-send-btn')
+  if (btn) btn.disabled = true
+
+  // Upload image if any
+  let imageUrl = null
+  if (dmImgFile) {
+    const path = `${ME.id}/${Date.now()}-${dmImgFile.name}`
+    const { error } = await sb.storage.from('dm-images').upload(path, dmImgFile)
+    if (!error) {
+      const { data: { publicUrl } } = sb.storage.from('dm-images').getPublicUrl(path)
+      imageUrl = publicUrl
+    }
+    removeDMImg()
+  }
+
+  // Optimistic UI
+  const fakeMsg = { id: 'tmp', conversation_id: activeChatId, sender_id: ME.id, content: txt||null, image_url: imageUrl, created_at: new Date().toISOString() }
+  const container = document.getElementById('dmMsgs')
+  if (container) {
+    container.insertAdjacentHTML('beforeend', msgHTML(fakeMsg))
+    container.scrollTop = container.scrollHeight
+  }
+
+  // Insert to DB
+  const { error } = await sb.from('messages').insert({
+    conversation_id: activeChatId,
+    sender_id: ME.id,
+    content: txt || null,
+    image_url: imageUrl
+  })
+
+  if (error) { toast('ส่งข้อความไม่สำเร็จ'); return }
+
+  // Update last_message in conversation
+  await sb.from('conversations')
+    .update({ last_message: txt || '📷 รูปภาพ', last_message_at: new Date().toISOString() })
+    .eq('id', activeChatId)
+
+  if (btn) btn.disabled = false
+  await fetchConvList()
+}
+
+window.openNewChat = async function() {
+  // Search users to start chat
+  const name = prompt('ค้นหาผู้ใช้ (username หรือชื่อ):')
+  if (!name) return
+  const { data } = await sb.from('profiles').select('id,username,display_name').or(`username.ilike.%${name}%,display_name.ilike.%${name}%`).neq('id', ME.id).limit(5)
+  if (!data || data.length === 0) { toast('ไม่พบผู้ใช้นี้'); return }
+  const peer = data[0]
+  // Get or create conversation
+  const { data: convId, error } = await sb.rpc('get_or_create_conversation', { p_user1_id: ME.id, p_user2_id: peer.id })
+  if (error) { toast('เกิดข้อผิดพลาด'); return }
+  await fetchConvList()
+  openChat(convId, peer.id, peer.display_name || peer.username, avClass(peer.username))
+}
+
+window.backToList = function() {
+  document.getElementById('dmMain').classList.remove('open')
+  document.getElementById('dmSidebar').classList.remove('hidden')
+}
+
+async function loadDMBadge() {
+  const { data } = await sb.rpc('get_unread_messages', { p_user_id: ME.id })
+  const badge = document.getElementById('dmBadge')
+  if (!badge) return
+  badge.style.display = data > 0 ? 'flex' : 'none'
+  badge.textContent = data > 9 ? '9+' : data
+}
+
+</script>
+</body>
+</html>
