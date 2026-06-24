@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SocialNet — Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--sidebar:#161b27;--card:#1e2535;--card2:#252d40;
+  --border:#2a3347;--blue:#4f8ef7;--blue-dk:#3a7be0;--blue-lt:rgba(79,142,247,.12);
+  --green:#34d399;--red:#f87171;--yellow:#fbbf24;--purple:#a78bfa;--orange:#fb923c;
+  --text:#e8eaf0;--muted:#7a8499;--white:#fff;
+  --r:8px;--r-lg:12px;--nav:60px;--sw:240px
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:inherit}
+input,select,textarea{font-family:inherit}
+
+/* ── AUTH ── */
+#authWrap{display:flex;min-height:100vh;align-items:center;justify-content:center;background:var(--bg)}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.auth-logo{font-size:22px;font-weight:800;color:var(--blue);margin-bottom:4px;letter-spacing:-.5px}
+.auth-sub{color:var(--muted);font-size:13px;margin-bottom:28px}
+.auth-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.auth-inp{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;font-size:14px;color:var(--text);outline:none;transition:.15s;margin-bottom:14px}
+.auth-inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
+.auth-inp::placeholder{color:var(--muted)}
+.btn-login{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;transition:.15s;margin-top:4px}
+.btn-login:hover{background:var(--blue-dk)}
+.auth-err{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:var(--red);border-radius:var(--r);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+.auth-err.show{display:block}
+.auth-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:var(--red);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin-bottom:20px}
+
+/* ── APP ── */
+#appWrap{display:none}
+.sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50}
+.s-logo{padding:20px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.s-logo-icon{width:34px;height:34px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:#fff}
+.s-logo-text{font-weight:800;font-size:15px}
+.s-logo-badge{font-size:10px;color:var(--muted);font-weight:500}
+.s-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.s-section{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:8px 10px 4px;margin-top:8px}
+.s-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:.15s;margin-bottom:2px}
+.s-item:hover{background:var(--card);color:var(--text)}
+.s-item.active{background:var(--blue-lt);color:var(--blue)}
+.s-item .icon{width:18px;text-align:center;font-size:15px;flex-shrink:0}
+.s-item .badge-count{margin-left:auto;background:var(--red);color:#fff;border-radius:10px;font-size:11px;font-weight:700;padding:1px 7px}
+.s-footer{padding:12px 10px;border-top:1px solid var(--border)}
+.s-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r)}
+.s-av{width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.s-uname{font-size:13px;font-weight:600}
+.s-urole{font-size:11px;color:var(--muted)}
+.s-logout{margin-top:4px;width:100%;padding:8px;background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:13px;transition:.15s}
+.s-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sw);min-height:100vh;display:flex;flex-direction:column}
+.topbar{height:var(--nav);background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:40}
+.tb-title{font-size:18px;font-weight:700;flex:1}
+.tb-search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:6px 12px;width:240px}
+.tb-search input{background:transparent;border:none;outline:none;font-size:13px;color:var(--text);width:100%}
+.tb-search input::placeholder{color:var(--muted)}
+.page{padding:24px;flex:1}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px}
+.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px}
+.stat-val{font-size:28px;font-weight:800;line-height:1}
+.stat-label{font-size:12px;color:var(--muted);margin-top:4px}
+.stat-change{font-size:12px;margin-top:8px;font-weight:600}
+.up{color:var(--green)}.down{color:var(--red)}
+
+/* ── TABLE ── */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.table-title{font-size:15px;font-weight:700}
+.table-actions{display:flex;gap:8px}
+.btn-sm{padding:6px 14px;border-radius:var(--r);font-size:13px;font-weight:600;border:none;transition:.15s;cursor:pointer}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-dk)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-ghost:hover{background:var(--card2)}
+.btn-danger{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.3)}.btn-danger:hover{background:rgba(248,113,113,.2)}
+.btn-success{background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.3)}.btn-success:hover{background:rgba(52,211,153,.2)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:12px 20px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:13px 20px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--card2)}
+.av-cell{display:flex;align-items:center;gap:10px}
+.av-sm{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.av-name{font-weight:600;font-size:13px}
+.av-user{font-size:12px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-green{background:rgba(52,211,153,.12);color:var(--green)}
+.badge-red{background:rgba(248,113,113,.12);color:var(--red)}
+.badge-blue{background:var(--blue-lt);color:var(--blue)}
+.badge-yellow{background:rgba(251,191,36,.12);color:var(--yellow)}
+.badge-purple{background:rgba(167,139,250,.12);color:var(--purple)}
+.td-actions{display:flex;gap:6px}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--border);font-size:13px;color:var(--muted)}
+.page-btns{display:flex;gap:4px}
+.page-btn{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--text);transition:.15s}
+.page-btn:hover{background:var(--card2)}.page-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:16px;font-weight:700}
+.modal-cl{width:32px;height:32px;background:var(--card2);border:none;border-radius:50%;color:var(--muted);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
+.modal-cl:hover{background:var(--border);color:var(--text)}
+.modal-body{padding:24px}
+.form-row{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.form-inp{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:14px;color:var(--text);outline:none;transition:.15s}
+.form-inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt)}
+.form-inp::placeholder{color:var(--muted)}
+.form-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a8499' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.form-ta{min-height:80px;resize:vertical}
+.modal-ft{display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border)}
+
+/* ── CONFIRM ── */
+.confirm-icon{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px}
+.confirm-title{font-size:17px;font-weight:700;text-align:center;margin-bottom:8px}
+.confirm-desc{font-size:13px;color:var(--muted);text-align:center;line-height:1.5}
+
+/* ── TABS ── */
+.tab-bar{display:flex;gap:4px;background:var(--card2);border-radius:var(--r);padding:4px;margin-bottom:20px;width:fit-content}
+.tab{padding:6px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:.15s;border:none;background:transparent}
+.tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+
+/* ── EMPTY / LOADING ── */
+.empty{text-align:center;padding:48px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:8px}
+.loading-row td{text-align:center;padding:32px;color:var(--muted)}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);color:var(--text);padding:12px 18px;border-radius:var(--r-lg);font-size:14px;z-index:999;opacity:0;transform:translateY(8px);transition:.3s;box-shadow:0 8px 32px rgba(0,0,0,.4);max-width:320px;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+
+/* ── POST PREVIEW ── */
+.post-preview{background:var(--card2);border-radius:var(--r);padding:12px;font-size:13px;line-height:1.5;margin-top:6px;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow-y:auto;color:var(--muted)}
+.post-img{width:100%;max-height:120px;object-fit:cover;border-radius:var(--r);margin-top:6px}
+
+/* ── AVATAR COLORS ── */
+.av0{background:#4f8ef7}.av1{background:#34d399}.av2{background:#a78bfa}
+.av3{background:#fb923c}.av4{background:#f87171}.av5{background:#22d3ee}
+.av6{background:#f472b6}.av7{background:#fbbf24}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .sidebar{transform:translateX(-100%)}
+  .main{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH ═══ -->
+<div id="authWrap">
+  <div class="auth-card">
+    <div class="auth-logo">⚙️ SocialNet Admin</div>
+    <div class="auth-sub">ระบบจัดการหลังบ้าน</div>
+    <div class="auth-badge">🔒 เฉพาะผู้ดูแลระบบเท่านั้น</div>
+    <div class="auth-err" id="adminErr"></div>
+    <div class="auth-label">อีเมล</div>
+    <input class="auth-inp" type="email" id="adminEmail" placeholder="admin@example.com" autocomplete="email">
+    <div class="auth-label">รหัสผ่าน</div>
+    <input class="auth-inp" type="password" id="adminPw" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="btn-login" onclick="adminLogin()">เข้าสู่ระบบ Admin</button>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="appWrap">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="s-logo">
+      <div class="s-logo-icon">S</div>
+      <div>
+        <div class="s-logo-text">SocialNet</div>
+        <div class="s-logo-badge">Admin Panel</div>
+      </div>
+    </div>
+    <nav class="s-nav">
+      <div class="s-section">ภาพรวม</div>
+      <div class="s-item active" onclick="goPage('dashboard',this)"><span class="icon">📊</span>Dashboard</div>
+
+      <div class="s-section">จัดการ</div>
+      <div class="s-item" onclick="goPage('users',this)"><span class="icon">👥</span>ผู้ใช้งาน</div>
+      <div class="s-item" onclick="goPage('posts',this)"><span class="icon">📝</span>โพสต์</div>
+      <div class="s-item" onclick="goPage('comments',this)"><span class="icon">💬</span>ความคิดเห็น</div>
+      <div class="s-item" onclick="goPage('reports',this)"><span class="icon">🚩</span>รายงาน <span class="badge-count" id="reportBadge" style="display:none">0</span></div>
+
+      <div class="s-section">ระบบ</div>
+      <div class="s-item" onclick="goPage('activity',this)"><span class="icon">📈</span>กิจกรรม</div>
+    </nav>
+    <div class="s-footer">
+      <div class="s-user">
+        <div class="s-av" id="sideAv">A</div>
+        <div>
+          <div class="s-uname" id="sideUname">Admin</div>
+          <div class="s-urole">ผู้ดูแลระบบ</div>
+        </div>
+      </div>
+      <button class="s-logout" onclick="adminLogout()">🚪 ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title" id="pageTitle">Dashboard</div>
+      <div class="tb-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="topSearch" placeholder="ค้นหาผู้ใช้, โพสต์...">
+      </div>
+      <button class="btn-sm btn-ghost" onclick="refreshPage()">🔄 รีเฟรช</button>
+    </div>
+    <div class="page" id="pageContent">
+      <div class="empty"><div class="spinner"></div> กำลังโหลด...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Edit User Modal -->
+<div class="modal-bg" id="editUserModal" onclick="if(event.target===this)closeModal('editUserModal')">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">✏️ แก้ไขข้อมูลผู้ใช้</div>
+      <button class="modal-cl" onclick="closeModal('editUserModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editUserId">
+      <div class="form-row">
+        <label class="form-label">ชื่อที่แสดง</label>
+        <input class="form-inp" type="text" id="editDisplayName" placeholder="ชื่อ-นามสกุล">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Username</label>
+        <input class="form-inp" type="text" id="editUsername" placeholder="username">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Bio</label>
+        <textarea class="form-inp form-ta" id="editBio" placeholder="เกี่ยวกับฉัน..."></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">สถานะบัญชี</label>
+        <select class="form-inp form-sel" id="editStatus">
+          <option value="active">✅ ปกติ</option>
+          <option value="suspended">🚫 ระงับชั่วคราว</option>
+          <option value="banned">❌ แบนถาวร</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-sm btn-ghost" onclick="closeModal('editUserModal')">ยกเลิก</button>
+      <button class="btn-sm btn-primary" onclick="saveUser()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Post Modal -->
+<div class="modal-bg" id="viewPostModal" onclick="if(event.target===this)closeModal('viewPostModal')">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">📝 รายละเอียดโพสต์</div>
+      <button class="modal-cl" onclick="closeModal('viewPostModal')">✕</button>
+    </div>
+    <div class="modal-body" id="viewPostBody"></div>
+    <div class="modal-ft">
+      <button class="btn-sm btn-ghost" onclick="closeModal('viewPostModal')">ปิด</button>
+      <button class="btn-sm btn-danger" id="deletePostBtn">🗑️ ลบโพสต์</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-bg" id="confirmModal" onclick="if(event.target===this)closeModal('confirmModal')">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-body" style="padding:32px 24px 16px;text-align:center">
+      <div class="confirm-icon" id="confirmIcon" style="background:rgba(248,113,113,.12)">⚠️</div>
+      <div class="confirm-title" id="confirmTitle">ยืนยันการดำเนินการ?</div>
+      <div class="confirm-desc" id="confirmDesc">การกระทำนี้ไม่สามารถย้อนกลับได้</div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-sm btn-ghost" onclick="closeModal('confirmModal')">ยกเลิก</button>
+      <button class="btn-sm btn-danger" id="confirmOkBtn">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const SUPA_URL = 'https://jjakewohlrhzjpqmeaox.supabase.co'
+const SUPA_KEY = 'sb_publishable_IjMLYbGme6mK4tlTqc4Tqw_eLMwuQy8'
+const sb = createClient(SUPA_URL, SUPA_KEY)
+
+// ADMIN EMAILS — เพิ่มอีเมล admin ได้ที่นี่
+const ADMIN_EMAILS = ['larmouamua@gmail.com','pahouaph22@gmail.com','6gwin99@gmail.com']
+
+let ME = null
+let currentPage = 'dashboard'
+const avC = s => ['av0','av1','av2','av3','av4','av5','av6','av7'][(s||'').charCodeAt(0)%8]
+const ini = n => (n||'?').charAt(0).toUpperCase()
+const rel = iso => {
+  const s=Math.floor((Date.now()-new Date(iso))/1000)
+  if(s<60) return 'เมื่อกี้'
+  if(s<3600) return Math.floor(s/60)+' นาทีที่แล้ว'
+  if(s<86400) return Math.floor(s/3600)+' ชม.ที่แล้ว'
+  if(s<604800) return Math.floor(s/86400)+' วันที่แล้ว'
+  return new Date(iso).toLocaleDateString('th-TH')
+}
+const fmt = iso => new Date(iso).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'})
+
+// ── TOAST ──
+window.toast = (msg,type='success') => {
+  const el=document.getElementById('toastEl')
+  el.textContent=msg; el.className='toast '+type+' show'
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),3000)
+}
+
+// ── AUTH ──
+window.adminLogin = async () => {
+  const email=document.getElementById('adminEmail').value.trim()
+  const pw=document.getElementById('adminPw').value
+  const err=document.getElementById('adminErr')
+  err.classList.remove('show')
+  if(!ADMIN_EMAILS.includes(email)){
+    err.textContent='บัญชีนี้ไม่มีสิทธิ์เข้าใช้งาน Admin Panel'
+    err.classList.add('show'); return
+  }
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pw})
+  if(error){err.textContent=error.message;err.classList.add('show');return}
+  await bootAdmin(data.user)
+}
+
+window.adminLogout = async () => {
+  await sb.auth.signOut()
+  document.getElementById('appWrap').style.display='none'
+  document.getElementById('authWrap').style.display='flex'
+  ME=null
+}
+
+sb.auth.onAuthStateChange(async(_,session)=>{
+  if(session?.user && ADMIN_EMAILS.includes(session.user.email) && !ME){
+    await bootAdmin(session.user)
+  }
+})
+
+async function bootAdmin(user){
+  const {data:prof}=await sb.from('profiles').select('*').eq('id',user.id).single()
+  ME={...user,...prof}
+  document.getElementById('authWrap').style.display='none'
+  document.getElementById('appWrap').style.display='block'
+  document.getElementById('sideAv').textContent=ini(ME.display_name)
+  document.getElementById('sideAv').className='s-av '+avC(ME.username)
+  document.getElementById('sideUname').textContent=ME.display_name||ME.email
+  goPage('dashboard',document.querySelector('.s-item.active'))
+}
+
+// ── NAVIGATION ──
+window.goPage = (page, el) => {
+  currentPage=page
+  document.querySelectorAll('.s-item').forEach(i=>i.classList.remove('active'))
+  el?.classList.add('active')
+  const titles={'dashboard':'📊 Dashboard','users':'👥 จัดการผู้ใช้งาน','posts':'📝 จัดการโพสต์','comments':'💬 จัดการความคิดเห็น','reports':'🚩 รายงาน','activity':'📈 กิจกรรม'}
+  document.getElementById('pageTitle').textContent=titles[page]||page
+  const pages={dashboard:renderDashboard,users:renderUsers,posts:renderPosts,comments:renderComments,reports:renderReports,activity:renderActivity}
+  pages[page]?.()
+}
+
+window.refreshPage = () => goPage(currentPage, document.querySelector('.s-item.active'))
+
+// ── MODAL ──
+window.closeModal = id => document.getElementById(id).classList.remove('open')
+window.openModal = id => document.getElementById(id).classList.add('open')
+
+function confirm(title, desc, onOk, icon='⚠️', btnClass='btn-danger', btnText='ยืนยัน'){
+  document.getElementById('confirmTitle').textContent=title
+  document.getElementById('confirmDesc').textContent=desc
+  document.getElementById('confirmIcon').textContent=icon
+  const btn=document.getElementById('confirmOkBtn')
+  btn.textContent=btnText; btn.className='btn-sm '+btnClass
+  btn.onclick=()=>{closeModal('confirmModal');onOk()}
+  openModal('confirmModal')
+}
+
+// ═══════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════
+async function renderDashboard(){
+  const pc=document.getElementById('pageContent')
+  pc.innerHTML='<div class="empty"><span class="spinner"></span> กำลังโหลด...</div>'
+  const [
+    {count:totalUsers},
+    {count:totalPosts},
+    {count:totalCmts},
+    {count:totalLikes},
+    {data:recentUsers},
+    {data:recentPosts}
+  ] = await Promise.all([
+    sb.from('profiles').select('*',{count:'exact',head:true}),
+    sb.from('posts').select('*',{count:'exact',head:true}),
+    sb.from('comments').select('*',{count:'exact',head:true}),
+    sb.from('post_likes').select('*',{count:'exact',head:true}),
+    sb.from('profiles').select('id,username,display_name,created_at').order('created_at',{ascending:false}).limit(5),
+    sb.from('posts').select('id,content,created_at,profiles:user_id(display_name,username)').order('created_at',{ascending:false}).limit(5)
+  ])
+  pc.innerHTML=`
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--blue-lt)">👥</div>
+      <div class="stat-val">${totalUsers||0}</div>
+      <div class="stat-label">ผู้ใช้งานทั้งหมด</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(52,211,153,.12)">📝</div>
+      <div class="stat-val">${totalPosts||0}</div>
+      <div class="stat-label">โพสต์ทั้งหมด</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(167,139,250,.12)">💬</div>
+      <div class="stat-val">${totalCmts||0}</div>
+      <div class="stat-label">ความคิดเห็น</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(248,113,113,.12)">❤️</div>
+      <div class="stat-val">${totalLikes||0}</div>
+      <div class="stat-label">ถูกใจทั้งหมด</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="table-card">
+      <div class="table-head"><div class="table-title">👤 ผู้ใช้ใหม่ล่าสุด</div><button class="btn-sm btn-ghost" onclick="goPage('users',document.querySelectorAll('.s-item')[2])">ดูทั้งหมด</button></div>
+      <table><thead><tr><th>ผู้ใช้</th><th>สมัครเมื่อ</th></tr></thead><tbody>
+      ${(recentUsers||[]).map(u=>`<tr>
+        <td><div class="av-cell"><div class="av-sm ${avC(u.username)}">${ini(u.display_name)}</div><div><div class="av-name">${u.display_name||'-'}</div><div class="av-user">@${u.username||'-'}</div></div></div></td>
+        <td style="color:var(--muted)">${rel(u.created_at)}</td>
+      </tr>`).join('')}
+      </tbody></table>
+    </div>
+    <div class="table-card">
+      <div class="table-head"><div class="table-title">📝 โพสต์ล่าสุด</div><button class="btn-sm btn-ghost" onclick="goPage('posts',document.querySelectorAll('.s-item')[3])">ดูทั้งหมด</button></div>
+      <table><thead><tr><th>เนื้อหา</th><th>โดย</th><th>เมื่อ</th></tr></thead><tbody>
+      ${(recentPosts||[]).map(p=>`<tr>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(p.content||'[รูปภาพ]').slice(0,60)}</td>
+        <td style="color:var(--muted)">@${p.profiles?.username||'-'}</td>
+        <td style="color:var(--muted)">${rel(p.created_at)}</td>
+      </tr>`).join('')}
+      </tbody></table>
+    </div>
+  </div>`
+}
+
+// ═══════════════════════════════════════════
+//  USERS
+// ═══════════════════════════════════════════
+let usersPage=0, usersSearch=''
+async function renderUsers(page=0){
+  usersPage=page
+  const pc=document.getElementById('pageContent')
+  pc.innerHTML='<div class="empty"><span class="spinner"></span> กำลังโหลด...</div>'
+  let q=sb.from('profiles').select('*',{count:'exact'}).order('created_at',{ascending:false}).range(page*20,page*20+19)
+  if(usersSearch) q=q.or(`username.ilike.%${usersSearch}%,display_name.ilike.%${usersSearch}%`)
+  const {data,count,error}=await q
+  if(error){pc.innerHTML='<div class="empty">โหลดไม่สำเร็จ</div>';return}
+  const totalPages=Math.ceil((count||0)/20)
+  pc.innerHTML=`
+  <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+    <input class="form-inp" style="max-width:280px" type="text" placeholder="🔍 ค้นหาชื่อหรือ username..." value="${usersSearch}"
+      oninput="window._usrSearch=this.value" onkeydown="if(event.key==='Enter'){usersSearch=window._usrSearch||'';renderUsers(0)}">
+    <button class="btn-sm btn-primary" onclick="usersSearch=document.querySelector('#pageContent input').value;renderUsers(0)">ค้นหา</button>
+    ${usersSearch?`<button class="btn-sm btn-ghost" onclick="usersSearch='';renderUsers(0)">✕ ล้าง</button>`:''}
+    <span style="margin-left:auto;color:var(--muted);font-size:13px">ทั้งหมด ${count||0} คน</span>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead><tr><th>ผู้ใช้</th><th>Username</th><th>Bio</th><th>สมัครเมื่อ</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+      <tbody>
+      ${!data||data.length===0
+        ? '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">ไม่พบผู้ใช้</td></tr>'
+        : data.map(u=>{
+          const status=u.status||'active'
+          const statusBadge=status==='active'?'<span class="badge badge-green">✅ ปกติ</span>':status==='suspended'?'<span class="badge badge-yellow">🚫 ระงับ</span>':'<span class="badge badge-red">❌ แบน</span>'
+          return `<tr>
+            <td><div class="av-cell"><div class="av-sm ${avC(u.username)}">${ini(u.display_name)}</div><div><div class="av-name">${u.display_name||'-'}</div><div class="av-user" style="font-size:11px">${u.id.slice(0,8)}...</div></div></div></td>
+            <td><span style="color:var(--blue)">@${u.username||'-'}</span></td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${u.bio||'-'}</td>
+            <td style="color:var(--muted);white-space:nowrap">${fmt(u.created_at)}</td>
+            <td>${statusBadge}</td>
+            <td><div class="td-actions">
+              <button class="btn-sm btn-ghost" onclick='openEditUser(${JSON.stringify(u)})'>✏️ แก้ไข</button>
+              <button class="btn-sm btn-danger" onclick="confirmDeleteUser('${u.id}','${(u.display_name||u.username||'').replace(/'/g,"\\'")}')">🗑️</button>
+            </div></td>
+          </tr>`}).join('')}
+      </tbody>
+    </table>
+    <div class="pagination">
+      <span>หน้า ${page+1} จาก ${totalPages||1}</span>
+      <div class="page-btns">
+        ${page>0?`<button class="page-btn" onclick="renderUsers(${page-1})">‹</button>`:''}
+        ${Array.from({length:Math.min(totalPages,5)},(_,i)=>`<button class="page-btn${i===page%5?' active':''}" onclick="renderUsers(${i})">${i+1}</button>`).join('')}
+        ${page+1<totalPages?`<button class="page-btn" onclick="renderUsers(${page+1})">›</button>`:''}
+      </div>
+    </div>
+  </div>`
+}
+
+window.openEditUser = u => {
+  document.getElementById('editUserId').value=u.id
+  document.getElementById('editDisplayName').value=u.display_name||''
+  document.getElementById('editUsername').value=u.username||''
+  document.getElementById('editBio').value=u.bio||''
+  document.getElementById('editStatus').value=u.status||'active'
+  openModal('editUserModal')
+}
+
+window.saveUser = async () => {
+  const id=document.getElementById('editUserId').value
+  const display_name=document.getElementById('editDisplayName').value.trim()
+  const username=document.getElementById('editUsername').value.trim().toLowerCase()
+  const bio=document.getElementById('editBio').value.trim()
+  const status=document.getElementById('editStatus').value
+  if(!display_name||!username){toast('กรุณากรอกข้อมูลให้ครบ','error');return}
+  const {error}=await sb.from('profiles').update({display_name,username,bio:bio||null,status}).eq('id',id)
+  if(error){toast('บันทึกไม่สำเร็จ: '+error.message,'error');return}
+  closeModal('editUserModal')
+  toast('✅ บันทึกข้อมูลผู้ใช้สำเร็จ')
+  renderUsers(usersPage)
+}
+
+window.confirmDeleteUser = (id,name) => {
+  confirm(`ลบผู้ใช้ "${name}"?`,'บัญชีนี้จะถูกลบออกจากระบบถาวร รวมถึงโพสต์และข้อมูลทั้งหมด',async()=>{
+    const {error}=await sb.from('profiles').delete().eq('id',id)
+    if(error){toast('ลบไม่สำเร็จ: '+error.message,'error');return}
+    toast('🗑️ ลบผู้ใช้แล้ว'); renderUsers(usersPage)
+  })
+}
+
+// ═══════════════════════════════════════════
+//  POSTS
+// ═══════════════════════════════════════════
+let postsPage=0
+async function renderPosts(page=0){
+  postsPage=page
+  const pc=document.getElementById('pageContent')
+  pc.innerHTML='<div class="empty"><span class="spinner"></span> กำลังโหลด...</div>'
+  const {data,count,error}=await sb.from('posts')
+    .select('id,content,image_urls,privacy,created_at,profiles:user_id(id,username,display_name),post_likes(count),comments(count)',{count:'exact'})
+    .order('created_at',{ascending:false}).range(page*20,page*20+19)
+  if(error){pc.innerHTML='<div class="empty">โหลดไม่สำเร็จ</div>';return}
+  const totalPages=Math.ceil((count||0)/20)
+  const privLabel={public:'🌐 สาธารณะ',followers:'👥 เพื่อน',private:'🔒 เฉพาะฉัน'}
+  const privBadge={public:'badge-green',followers:'badge-blue',private:'badge-yellow'}
+  pc.innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <span style="color:var(--muted);font-size:13px">ทั้งหมด ${count||0} โพสต์</span>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead><tr><th>ผู้โพสต์</th><th>เนื้อหา</th><th>ความเป็นส่วนตัว</th><th>❤️</th><th>💬</th><th>วันที่</th><th>จัดการ</th></tr></thead>
+      <tbody>
+      ${!data||data.length===0
+        ? '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีโพสต์</td></tr>'
+        : data.map(p=>`<tr>
+          <td><div class="av-cell"><div class="av-sm ${avC(p.profiles?.username)}">${ini(p.profiles?.display_name)}</div><div><div class="av-name">${p.profiles?.display_name||'-'}</div><div class="av-user">@${p.profiles?.username||'-'}</div></div></div></td>
+          <td style="max-width:200px">
+            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">${(p.content||'').slice(0,80)||'<span style="color:var(--muted)">[รูปภาพ]</span>'}
+            ${p.image_urls?.length?`<span style="color:var(--muted)"> 🖼️×${p.image_urls.length}</span>`:''}
+            </div>
+          </td>
+          <td><span class="badge ${privBadge[p.privacy]||'badge-blue'}">${privLabel[p.privacy]||p.privacy}</span></td>
+          <td style="color:var(--muted)">${p.post_likes?.[0]?.count||0}</td>
+          <td style="color:var(--muted)">${p.comments?.[0]?.count||0}</td>
+          <td style="color:var(--muted);white-space:nowrap">${rel(p.created_at)}</td>
+          <td><div class="td-actions">
+            <button class="btn-sm btn-ghost" onclick='viewPost(${JSON.stringify(p)})'>👁️ ดู</button>
+            <button class="btn-sm btn-danger" onclick="confirmDeletePost('${p.id}')">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="pagination">
+      <span>หน้า ${page+1} จาก ${totalPages||1}</span>
+      <div class="page-btns">
+        ${page>0?`<button class="page-btn" onclick="renderPosts(${page-1})">‹</button>`:''}
+        ${Array.from({length:Math.min(totalPages,5)},(_,i)=>`<button class="page-btn${i===page%5?' active':''}" onclick="renderPosts(${i})">${i+1}</button>`).join('')}
+        ${page+1<totalPages?`<button class="page-btn" onclick="renderPosts(${page+1})">›</button>`:''}
+      </div>
+    </div>
+  </div>`
+}
+
+window.viewPost = p => {
+  document.getElementById('viewPostBody').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="av-sm ${avC(p.profiles?.username)}">${ini(p.profiles?.display_name)}</div>
+      <div>
+        <div style="font-weight:600">${p.profiles?.display_name||'-'}</div>
+        <div style="font-size:12px;color:var(--muted)">@${p.profiles?.username||'-'} · ${fmt(p.created_at)}</div>
+      </div>
+    </div>
+    ${p.content?`<div class="post-preview">${p.content.replace(/</g,'&lt;')}</div>`:''}
+    ${p.image_urls?.map(u=>`<img class="post-img" src="${u}" alt="">`).join('')||''}
+    <div style="display:flex;gap:16px;margin-top:12px;font-size:13px;color:var(--muted)">
+      <span>❤️ ${p.post_likes?.[0]?.count||0} ถูกใจ</span>
+      <span>💬 ${p.comments?.[0]?.count||0} ความคิดเห็น</span>
+      <span>ID: ${p.id.slice(0,12)}...</span>
+    </div>`
+  document.getElementById('deletePostBtn').onclick=()=>{closeModal('viewPostModal');confirmDeletePost(p.id)}
+  openModal('viewPostModal')
+}
+
+window.confirmDeletePost = id => {
+  confirm('ลบโพสต์นี้?','โพสต์และความคิดเห็นทั้งหมดจะถูกลบถาวร',async()=>{
+    const {error}=await sb.from('posts').delete().eq('id',id)
+    if(error){toast('ลบไม่สำเร็จ','error');return}
+    toast('🗑️ ลบโพสต์แล้ว'); renderPosts(postsPage)
+  })
+}
+
+// ═══════════════════════════════════════════
+//  COMMENTS
+// ═══════════════════════════════════════════
+let cmtsPage=0
+async function renderComments(page=0){
+  cmtsPage=page
+  const pc=document.getElementById('pageContent')
+  pc.innerHTML='<div class="empty"><span class="spinner"></span> กำลังโหลด...</div>'
+  const {data,count,error}=await sb.from('comments')
+    .select('id,content,created_at,profiles:user_id(username,display_name),post_id',{count:'exact'})
+    .is('parent_id',null).order('created_at',{ascending:false}).range(page*20,page*20+19)
+  if(error){pc.innerHTML='<div class="empty">โหลดไม่สำเร็จ</div>';return}
+  const totalPages=Math.ceil((count||0)/20)
+  pc.innerHTML=`
+  <div style="margin-bottom:16px;color:var(--muted);font-size:13px">ทั้งหมด ${count||0} ความคิดเห็น</div>
+  <div class="table-card">
+    <table>
+      <thead><tr><th>ผู้แสดงความคิดเห็น</th><th>เนื้อหา</th><th>Post ID</th><th>วันที่</th><th>จัดการ</th></tr></thead>
+      <tbody>
+      ${!data||data.length===0
+        ? '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีความคิดเห็น</td></tr>'
+        : data.map(c=>`<tr>
+          <td><div class="av-cell"><div class="av-sm ${avC(c.profiles?.username)}">${ini(c.profiles?.display_name)}</div><div class="av-name">${c.profiles?.display_name||'-'}</div></div></td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.content.replace(/</g,'&lt;')}</td>
+          <td style="color:var(--muted);font-size:12px">${c.post_id?.slice(0,8)}...</td>
+          <td style="color:var(--muted);white-space:nowrap">${rel(c.created_at)}</td>
+          <td><button class="btn-sm btn-danger" onclick="confirmDeleteCmt('${c.id}')">🗑️ ลบ</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="pagination">
+      <span>หน้า ${page+1} จาก ${totalPages||1}</span>
+      <div class="page-btns">
+        ${page>0?`<button class="page-btn" onclick="renderComments(${page-1})">‹</button>`:''}
+        ${Array.from({length:Math.min(totalPages,5)},(_,i)=>`<button class="page-btn${i===page%5?' active':''}" onclick="renderComments(${i})">${i+1}</button>`).join('')}
+        ${page+1<totalPages?`<button class="page-btn" onclick="renderComments(${page+1})">›</button>`:''}
+      </div>
+    </div>
+  </div>`
+}
+
+window.confirmDeleteCmt = id => {
+  confirm('ลบความคิดเห็นนี้?','ความคิดเห็นนี้จะถูกลบถาวร',async()=>{
+    const {error}=await sb.from('comments').delete().eq('id',id)
+    if(error){toast('ลบไม่สำเร็จ','error');return}
+    toast('🗑️ ลบความคิดเห็นแล้ว'); renderComments(cmtsPage)
+  })
+}
+
+// ═══════════════════════════════════════════
+//  REPORTS (placeholder — ถ้ามีตาราง reports)
+// ═══════════════════════════════════════════
+async function renderReports(){
+  const pc=document.getElementById('pageContent')
+  pc.innerHTML=`
+  <div class="table-card" style="padding:48px;text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">🚩</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:8px">ระบบรายงาน</div>
+    <div style="color:var(--muted);margin-bottom:20px">ยังไม่มีรายงานในระบบ หรือตาราง reports ยังไม่ได้สร้าง</div>
+    <div style="background:var(--card2);border-radius:var(--r);padding:16px;font-size:13px;color:var(--muted);text-align:left;max-width:400px;margin:0 auto">
+      <div style="font-weight:700;color:var(--text);margin-bottom:8px">SQL สร้างตาราง reports:</div>
+      <code style="font-family:monospace;line-height:1.8">CREATE TABLE reports (<br>
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,<br>
+  reporter_id uuid REFERENCES profiles(id),<br>
+  post_id uuid REFERENCES posts(id),<br>
+  reason text,<br>
+  status text DEFAULT 'pending',<br>
+  created_at timestamptz DEFAULT now()<br>
+);</code>
+    </div>
+  </div>`
+}
+
+// ═══════════════════════════════════════════
+//  ACTIVITY LOG
+// ═══════════════════════════════════════════
+async function renderActivity(){
+  const pc=document.getElementById('pageContent')
+  pc.innerHTML='<div class="empty"><span class="spinner"></span> กำลังโหลด...</div>'
+  const [
+    {data:latestPosts},
+    {data:latestCmts},
+    {data:latestLikes},
+    {data:latestFollows}
+  ] = await Promise.all([
+    sb.from('posts').select('id,content,created_at,profiles:user_id(display_name,username)').order('created_at',{ascending:false}).limit(10),
+    sb.from('comments').select('id,content,created_at,profiles:user_id(display_name,username)').order('created_at',{ascending:false}).limit(10),
+    sb.from('post_likes').select('id,created_at,profiles:user_id(display_name,username)').order('created_at',{ascending:false}).limit(10),
+    sb.from('follows').select('id,created_at,follower:follower_id(display_name,username),following:following_id(display_name,username)').order('created_at',{ascending:false}).limit(10)
+  ])
+  const activities=[
+    ...(latestPosts||[]).map(p=>({t:p.created_at,icon:'📝',text:`<strong>${p.profiles?.display_name}</strong> โพสต์: "${(p.content||'[รูปภาพ]').slice(0,60)}"`})),
+    ...(latestCmts||[]).map(c=>({t:c.created_at,icon:'💬',text:`<strong>${c.profiles?.display_name}</strong> แสดงความคิดเห็น: "${c.content.slice(0,60)}"`})),
+    ...(latestLikes||[]).map(l=>({t:l.created_at,icon:'❤️',text:`<strong>${l.profiles?.display_name}</strong> กดถูกใจโพสต์`})),
+    ...(latestFollows||[]).map(f=>({t:f.created_at,icon:'👤',text:`<strong>${f.follower?.display_name}</strong> ติดตาม <strong>${f.following?.display_name}</strong>`}))
+  ].sort((a,b)=>new Date(b.t)-new Date(a.t)).slice(0,40)
+
+  pc.innerHTML=`
+  <div class="table-card">
+    <div class="table-head"><div class="table-title">📈 กิจกรรมล่าสุดในระบบ</div></div>
+    <div style="padding:8px 0">
+    ${activities.length===0?'<div class="empty">ยังไม่มีกิจกรรม</div>':
+      activities.map(a=>`
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border)">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px">${a.icon}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;line-height:1.4">${a.text}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${rel(a.t)}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`
+}
+
+// ── GLOBAL SEARCH ──
+let _srchTimer
+document.getElementById('topSearch').addEventListener('input', e => {
+  clearTimeout(_srchTimer)
+  const q = e.target.value.trim()
+  if(!q) return
+  _srchTimer = setTimeout(async () => {
+    if(currentPage==='users'){ usersSearch=q; renderUsers(0) }
+  }, 400)
+})
+</script>
+</body>
+</html>
